@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   Loader2,
   Camera,
@@ -28,66 +28,85 @@ import {
   Moon,
   Sun,
   Palette,
+  ArrowRight,
+  Globe,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase"
 import { useTheme } from "next-themes"
 
+const COLOR_THEMES = [
+  { name: "Classic", value: "classic", gradient: "from-gray-600 to-gray-800", color: "bg-gray-600" },
+  { name: "Cambodian", value: "cambodian", gradient: "from-red-600 to-yellow-600", color: "bg-red-600" },
+  { name: "Ocean", value: "ocean", gradient: "from-blue-600 to-cyan-600", color: "bg-blue-600" },
+  { name: "Forest", value: "forest", gradient: "from-green-600 to-emerald-600", color: "bg-green-600" },
+  { name: "Sunset", value: "sunset", gradient: "from-orange-600 to-pink-600", color: "bg-orange-600" },
+  { name: "Purple", value: "purple", gradient: "from-purple-600 to-violet-600", color: "bg-purple-600" },
+  { name: "Rose", value: "rose", gradient: "from-pink-600 to-rose-600", color: "bg-pink-600" },
+  { name: "Mint", value: "mint", gradient: "from-teal-600 to-green-600", color: "bg-teal-600" },
+]
+
 const VIBE_OPTIONS = [
-  { value: "casual", label: "ធម្មតា", labelEn: "Casual", icon: Coffee, gradient: "from-amber-500 to-orange-500" },
-  {
-    value: "professional",
-    label: "វិជ្ជាជីវៈ",
-    labelEn: "Professional",
-    icon: Zap,
-    gradient: "from-blue-500 to-indigo-500",
-  },
-  { value: "fun", label: "កំសាន្ត", labelEn: "Fun & Playful", icon: Smile, gradient: "from-pink-500 to-rose-500" },
-  {
-    value: "inspirational",
-    label: "បំផុសគំនិត",
-    labelEn: "Inspirational",
-    icon: Sparkles,
-    gradient: "from-purple-500 to-violet-500",
-  },
-  { value: "trendy", label: "ទាន់សម័យ", labelEn: "Trendy", icon: Heart, gradient: "from-red-500 to-pink-500" },
+  { value: "casual", label: "ធម្មតា", labelEn: "Casual", icon: Coffee },
+  { value: "professional", label: "វិជ្ជាជីវៈ", labelEn: "Professional", icon: Zap },
+  { value: "fun", label: "កំសាន្ត", labelEn: "Fun & Playful", icon: Smile },
+  { value: "inspirational", label: "បំផុសគំនិត", labelEn: "Inspirational", icon: Sparkles },
+  { value: "trendy", label: "ទាន់សម័យ", labelEn: "Trendy", icon: Heart },
 ]
 
 const BUSINESS_TYPES = [
-  "Restaurant/Food",
-  "Fashion/Clothing",
-  "Technology",
-  "Healthcare",
-  "Education",
-  "Real Estate",
-  "Tourism",
-  "Beauty/Cosmetics",
-  "Automotive",
-  "Finance",
-  "Other",
+  { value: "restaurant", label: "ភោជនីយដ្ឋាន/អាហារ", labelEn: "Restaurant/Food" },
+  { value: "fashion", label: "ម៉ូដ/សម្លៀកបំពាក់", labelEn: "Fashion/Clothing" },
+  { value: "technology", label: "បច្ចេកវិទ្យា", labelEn: "Technology" },
+  { value: "healthcare", label: "សុខាភិបាល", labelEn: "Healthcare" },
+  { value: "education", label: "អប់រំ", labelEn: "Education" },
+  { value: "realestate", label: "អចលនទ្រព្យ", labelEn: "Real Estate" },
+  { value: "tourism", label: "ទេសចរណ៍", labelEn: "Tourism" },
+  { value: "beauty", label: "សម្រស់/គ្រឿងសម្អាង", labelEn: "Beauty/Cosmetics" },
+  { value: "automotive", label: "យានយន្ត", labelEn: "Automotive" },
+  { value: "finance", label: "ហិរញ្ញវត្ថុ", labelEn: "Finance" },
+  { value: "other", label: "ផ្សេងៗ", labelEn: "Other" },
 ]
 
 const TARGET_AUDIENCES = [
-  "Young Adults (18-25)",
-  "Adults (26-40)",
-  "Middle-aged (41-55)",
-  "Seniors (55+)",
-  "Students",
-  "Professionals",
-  "Parents",
-  "Entrepreneurs",
-  "General Public",
+  { value: "young-adults", label: "យុវជន (១៨-២៥)", labelEn: "Young Adults (18-25)" },
+  { value: "adults", label: "មនុស្សពេញវ័យ (២៦-៤០)", labelEn: "Adults (26-40)" },
+  { value: "middle-aged", label: "វ័យកណ្តាល (៤១-៥៥)", labelEn: "Middle-aged (41-55)" },
+  { value: "seniors", label: "មនុស្សចាស់ (៥៥+)", labelEn: "Seniors (55+)" },
+  { value: "students", label: "និស្សិត", labelEn: "Students" },
+  { value: "professionals", label: "អ្នកជំនាញ", labelEn: "Professionals" },
+  { value: "parents", label: "ឪពុកម្តាយ", labelEn: "Parents" },
+  { value: "entrepreneurs", label: "សហគ្រិន", labelEn: "Entrepreneurs" },
+  { value: "general", label: "សាធារណជន", labelEn: "General Public" },
 ]
 
 const BRAND_VOICES = [
-  "Friendly & Approachable",
-  "Professional & Authoritative",
-  "Fun & Playful",
-  "Sophisticated & Elegant",
-  "Bold & Edgy",
-  "Warm & Caring",
-  "Innovative & Forward-thinking",
+  { value: "friendly", label: "មិត្តភាព និងងាយស្រួល", labelEn: "Friendly & Approachable" },
+  { value: "professional", label: "វិជ្ជាជីវៈ និងអាជ្ញាធរ", labelEn: "Professional & Authoritative" },
+  { value: "fun", label: "កំសាន្ត និងលេង", labelEn: "Fun & Playful" },
+  { value: "sophisticated", label: "ទំនើប និងឆើតឆាយ", labelEn: "Sophisticated & Elegant" },
+  { value: "bold", label: "ក្លាហាន និងច្នៃប្រឌិត", labelEn: "Bold & Edgy" },
+  { value: "warm", label: "កក់ក្តៅ និងយកចិត្តទុកដាក់", labelEn: "Warm & Caring" },
+  { value: "innovative", label: "ច្នៃប្រឌិត និងទំនើប", labelEn: "Innovative & Forward-thinking" },
+]
+
+const COMPANY_SIZES = [
+  { value: "1-10", label: "១-១០ នាក់", labelEn: "1-10 employees" },
+  { value: "11-50", label: "១១-៥០ នាក់", labelEn: "11-50 employees" },
+  { value: "51-200", label: "៥១-២០០ នាក់", labelEn: "51-200 employees" },
+  { value: "201-1000", label: "២០១-១០០០ នាក់", labelEn: "201-1000 employees" },
+  { value: "1000+", label: "១០០០+ នាក់", labelEn: "1000+ employees" },
+]
+
+const MARKETING_GOALS = [
+  { value: "brand-awareness", label: "ការស្គាល់ម៉ាក", labelEn: "Brand Awareness" },
+  { value: "lead-generation", label: "បង្កើតអតិថិជនសក្តានុពល", labelEn: "Lead Generation" },
+  { value: "sales", label: "ការលក់", labelEn: "Sales" },
+  { value: "engagement", label: "ការចូលរួម", labelEn: "Engagement" },
+  { value: "community", label: "បង្កើតសហគមន៍", labelEn: "Community Building" },
+  { value: "retention", label: "រក្សាអតិថិជន", labelEn: "Customer Retention" },
+  { value: "product-launch", label: "បើកដំណើរការផលិតផល", labelEn: "Product Launch" },
 ]
 
 interface UserType {
@@ -115,10 +134,11 @@ interface CompanyProfile {
 }
 
 export default function Component() {
+  const [currentView, setCurrentView] = useState<"landing" | "auth" | "app">("landing")
   const [language, setLanguage] = useState<"km" | "en">("km")
+  const [colorTheme, setColorTheme] = useState("classic")
   const [user, setUser] = useState<UserType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [showAuth, setShowAuth] = useState(false)
   const [authMode, setAuthMode] = useState<"login" | "signup">("login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -152,11 +172,24 @@ export default function Component() {
   const { theme, setTheme } = useTheme()
   const supabase = createClient()
 
+  const currentTheme = COLOR_THEMES.find((t) => t.value === colorTheme) || COLOR_THEMES[0]
+
   const t = {
     km: {
       title: "ចំណង",
       titleEn: "(Jomnorng)",
       subtitle: "កម្មវិធីបង្កើតចំណងជើងសម្រាប់បណ្តាញសង្គមដោយ AI",
+      heroTitle: "បង្កើតចំណងជើងដ៏ទាក់ទាញ",
+      heroSubtitle: "ប្រើប្រាស់ AI ដើម្បីបង្កើតចំណងជើងសម្រាប់បណ្តាញសង្គមដោយស្វ័យប្រវត្តិ",
+      getStarted: "ចាប់ផ្តើម",
+      features: "លក្ខណៈពិសេស",
+      aiPowered: "ដំណើរការដោយ AI",
+      aiDesc: "ប្រើប្រាស់បច្ចេកវិទ្យា AI ទំនើបបំផុត",
+      multilingual: "ពហុភាសា",
+      multilingualDesc: "គាំទ្រភាសាខ្មែរ និងអង់គ្លេស",
+      customizable: "អាចកែប្រែបាន",
+      customizableDesc: "កែប្រែតាមរបៀបរបស់អ្នក",
+      colorTheme: "ពណ៌ធីម",
       login: "ចូលគណនី",
       signup: "បង្កើតគណនី",
       email: "អ៊ីមែល",
@@ -178,11 +211,37 @@ export default function Component() {
       copyCaption: "ចម្លងចំណងជើង",
       companyProfile: "ព័ត៌មានក្រុមហ៊ុន",
       saveProfile: "រក្សាទុកព័ត៌មាន",
+      basicInfo: "ព័ត៌មានមូលដ្ឋាន",
+      brandVoice: "ម៉ាក និងសំឡេង",
+      goalsStrategy: "គោលដៅ និងយុទ្ធសាស្ត្រ",
+      companyName: "ឈ្មោះក្រុមហ៊ុន",
+      businessType: "ប្រភេទអាជីវកម្ម",
+      companyDescription: "ការពិពណ៌នាក្រុមហ៊ុន",
+      companySize: "ទំហំក្រុមហ៊ុន",
+      websiteUrl: "គេហទំព័រ",
+      targetAudience: "ទស្សនិកជនគោលដៅ",
+      brandVoiceLabel: "សំឡេងម៉ាក",
+      brandColors: "ពណ៌ម៉ាក",
+      socialHandles: "គណនីបណ្តាញសង្គម",
+      uniqueSellingPoints: "ចំណុចលក់ពិសេស",
+      industryFocus: "ការផ្តោតលើឧស្សាហកម្ម",
+      marketingGoals: "គោលដៅទីផ្សារ",
     },
     en: {
       title: "Jomnorng",
       titleEn: "(ចំណង)",
       subtitle: "AI-powered social media caption generator",
+      heroTitle: "Create Engaging Captions",
+      heroSubtitle: "Use AI to automatically generate social media captions",
+      getStarted: "Get Started",
+      features: "Features",
+      aiPowered: "AI Powered",
+      aiDesc: "Using the latest AI technology",
+      multilingual: "Multilingual",
+      multilingualDesc: "Supports Khmer and English",
+      customizable: "Customizable",
+      customizableDesc: "Customize to your style",
+      colorTheme: "Color Theme",
       login: "Login",
       signup: "Sign Up",
       email: "Email",
@@ -204,6 +263,21 @@ export default function Component() {
       copyCaption: "Copy Caption",
       companyProfile: "Company Profile",
       saveProfile: "Save Profile",
+      basicInfo: "Basic Info",
+      brandVoice: "Brand & Voice",
+      goalsStrategy: "Goals & Strategy",
+      companyName: "Company Name",
+      businessType: "Business Type",
+      companyDescription: "Company Description",
+      companySize: "Company Size",
+      websiteUrl: "Website URL",
+      targetAudience: "Target Audience",
+      brandVoiceLabel: "Brand Voice",
+      brandColors: "Brand Colors",
+      socialHandles: "Social Media Handles",
+      uniqueSellingPoints: "Unique Selling Points",
+      industryFocus: "Industry Focus",
+      marketingGoals: "Marketing Goals",
     },
   }
 
@@ -232,7 +306,7 @@ export default function Component() {
           password,
         })
         if (error) throw error
-        setShowAuth(false)
+        setCurrentView("app")
       }
     } catch (error: any) {
       toast({
@@ -248,6 +322,7 @@ export default function Component() {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setUser(null)
+    setCurrentView("landing")
     setCompanyProfile({
       user_id: "",
       company_name: "",
@@ -277,7 +352,10 @@ export default function Component() {
           email: user.email!,
           full_name: user.user_metadata?.full_name,
         })
+        setCurrentView("app")
         loadCompanyProfile(user.id)
+      } else {
+        setCurrentView("landing")
       }
       setIsLoading(false)
     }
@@ -292,9 +370,11 @@ export default function Component() {
           email: session.user.email!,
           full_name: session.user.user_metadata?.full_name,
         })
+        setCurrentView("app")
         loadCompanyProfile(session.user.id)
       } else {
         setUser(null)
+        setCurrentView("landing")
       }
     })
 
@@ -403,6 +483,7 @@ export default function Component() {
           vibe: selectedVibe,
           customPrompt,
           companyProfile,
+          language,
         }),
       })
 
@@ -446,25 +527,144 @@ export default function Component() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
       </div>
     )
   }
 
-  if (!user) {
+  // Landing Page
+  if (currentView === "landing") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-violet-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl">
+      <div className="min-h-screen bg-white dark:bg-black">
+        {/* Header */}
+        <header className="p-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-10 h-10 bg-gradient-to-r ${currentTheme.gradient} rounded-xl flex items-center justify-center`}
+              >
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-black dark:text-white">
+                {language === "km" ? "ចំណង (Jomnorng)" : "Jomnorng (ចំណង)"}
+              </h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={language} onValueChange={(value: "km" | "en") => setLanguage(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="km">🇰🇭 ខ្មែរ</SelectItem>
+                  <SelectItem value="en">🇺🇸 English</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={colorTheme} onValueChange={setColorTheme}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {COLOR_THEMES.map((theme) => (
+                    <SelectItem key={theme.value} value={theme.value}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${theme.color}`} />
+                        {theme.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button variant="outline" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        {/* Hero Section */}
+        <main className="max-w-6xl mx-auto px-4 py-16">
+          <div className="text-center space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-5xl md:text-7xl font-bold text-black dark:text-white">{t[language].heroTitle}</h1>
+              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">{t[language].heroSubtitle}</p>
+            </div>
+
+            <div className="flex gap-4 justify-center">
+              <Button
+                onClick={() => setCurrentView("auth")}
+                className={`bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90 text-white px-8 py-3 text-lg`}
+              >
+                {t[language].getStarted}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+
+            {/* Features */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+              <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
+                <CardContent className="p-6 text-center space-y-4">
+                  <div
+                    className={`w-16 h-16 mx-auto bg-gradient-to-r ${currentTheme.gradient} rounded-2xl flex items-center justify-center`}
+                  >
+                    <Sparkles className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-black dark:text-white">{t[language].aiPowered}</h3>
+                  <p className="text-gray-600 dark:text-gray-400">{t[language].aiDesc}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
+                <CardContent className="p-6 text-center space-y-4">
+                  <div
+                    className={`w-16 h-16 mx-auto bg-gradient-to-r ${currentTheme.gradient} rounded-2xl flex items-center justify-center`}
+                  >
+                    <Globe className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-black dark:text-white">{t[language].multilingual}</h3>
+                  <p className="text-gray-600 dark:text-gray-400">{t[language].multilingualDesc}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
+                <CardContent className="p-6 text-center space-y-4">
+                  <div
+                    className={`w-16 h-16 mx-auto bg-gradient-to-r ${currentTheme.gradient} rounded-2xl flex items-center justify-center`}
+                  >
+                    <Palette className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-black dark:text-white">{t[language].customizable}</h3>
+                  <p className="text-gray-600 dark:text-gray-400">{t[language].customizableDesc}</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Auth Page
+  if (currentView === "auth") {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
+            <Button variant="ghost" onClick={() => setCurrentView("landing")} className="absolute top-4 left-4 p-2">
+              ← Back
+            </Button>
+            <div
+              className={`mx-auto w-16 h-16 bg-gradient-to-r ${currentTheme.gradient} rounded-2xl flex items-center justify-center`}
+            >
               <Sparkles className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold text-black dark:text-white">
                 {language === "km" ? "ចំណង (Jomnorng)" : "Jomnorng (ចំណង)"}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2">{t[language].subtitle}</p>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">{t[language].subtitle}</p>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -481,7 +681,7 @@ export default function Component() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="bg-white/50 dark:bg-gray-700/50"
+                    className="bg-gray-50 dark:bg-gray-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -491,7 +691,7 @@ export default function Component() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="bg-white/50 dark:bg-gray-700/50"
+                    className="bg-gray-50 dark:bg-gray-800"
                   />
                 </div>
               </TabsContent>
@@ -502,7 +702,7 @@ export default function Component() {
                     id="fullName"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="bg-white/50 dark:bg-gray-700/50"
+                    className="bg-gray-50 dark:bg-gray-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -512,7 +712,7 @@ export default function Component() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="bg-white/50 dark:bg-gray-700/50"
+                    className="bg-gray-50 dark:bg-gray-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -522,14 +722,14 @@ export default function Component() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="bg-white/50 dark:bg-gray-700/50"
+                    className="bg-gray-50 dark:bg-gray-800"
                   />
                 </div>
               </TabsContent>
             </Tabs>
             <Button
               onClick={handleAuth}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              className={`w-full bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
             >
               {authMode === "login" ? t[language].login : t[language].signup}
             </Button>
@@ -539,20 +739,25 @@ export default function Component() {
     )
   }
 
+  // Main App
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-violet-900 transition-colors duration-300">
+    <div className="min-h-screen bg-white dark:bg-black">
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+            <div
+              className={`w-12 h-12 bg-gradient-to-r ${currentTheme.gradient} rounded-xl flex items-center justify-center`}
+            >
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-black dark:text-white">
                 {language === "km" ? "ចំណង (Jomnorng)" : "Jomnorng (ចំណង)"}
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Welcome back, {user.full_name || user.email}!</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Welcome back, {user?.full_name || user?.email}!
+              </p>
             </div>
           </div>
 
@@ -567,16 +772,31 @@ export default function Component() {
               </SelectContent>
             </Select>
 
+            <Select value={colorTheme} onValueChange={setColorTheme}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {COLOR_THEMES.map((theme) => (
+                  <SelectItem key={theme.value} value={theme.value}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${theme.color}`} />
+                      {theme.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Button variant="outline" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
 
+            <Button variant="outline" size="icon" onClick={() => setShowProfile(true)}>
+              <User className="w-4 h-4" />
+            </Button>
+
             <Dialog open={showProfile} onOpenChange={setShowProfile}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <User className="w-4 h-4" />
-                </Button>
-              </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
@@ -590,6 +810,8 @@ export default function Component() {
                   onSave={saveCompanyProfile}
                   isSaving={isSavingProfile}
                   language={language}
+                  t={t}
+                  currentTheme={currentTheme}
                 />
               </DialogContent>
             </Dialog>
@@ -605,21 +827,23 @@ export default function Component() {
           {/* Left Column - Image Upload & Controls */}
           <div className="lg:col-span-2 space-y-6">
             {/* Image Upload */}
-            <Card className="border-0 shadow-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl">
+            <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-purple-600" />
+                <CardTitle className="flex items-center gap-2 text-black dark:text-white">
+                  <Camera className="w-5 h-5" />
                   {t[language].uploadImage}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {!image ? (
-                  <div className="border-2 border-dashed border-purple-300 dark:border-purple-600 rounded-xl p-8 text-center space-y-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
-                    <div className="w-16 h-16 mx-auto bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center space-y-4 bg-gray-50 dark:bg-gray-800">
+                    <div
+                      className={`w-16 h-16 mx-auto bg-gradient-to-r ${currentTheme.gradient} rounded-2xl flex items-center justify-center`}
+                    >
                       <Upload className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <p className="text-lg font-medium">
+                      <p className="text-lg font-medium text-black dark:text-white">
                         {language === "km" ? "ផ្ទុករូបភាពដើម្បីចាប់ផ្តើម" : "Upload an image to get started"}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">{t[language].uploadDesc}</p>
@@ -627,7 +851,7 @@ export default function Component() {
                     <div className="flex gap-3 justify-center">
                       <Button
                         onClick={() => fileInputRef.current?.click()}
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        className={`bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
                       >
                         <Upload className="w-4 h-4 mr-2" />
                         {t[language].chooseFile}
@@ -674,10 +898,10 @@ export default function Component() {
 
             {/* Vibe Selection */}
             {image && (
-              <Card className="border-0 shadow-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl">
+              <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Palette className="w-5 h-5 text-purple-600" />
+                  <CardTitle className="flex items-center gap-2 text-black dark:text-white">
+                    <Palette className="w-5 h-5" />
                     {t[language].chooseVibe}
                   </CardTitle>
                 </CardHeader>
@@ -691,7 +915,7 @@ export default function Component() {
                           variant={selectedVibe === vibe.value ? "default" : "outline"}
                           className={`h-auto p-4 flex flex-col gap-2 transition-all ${
                             selectedVibe === vibe.value
-                              ? `bg-gradient-to-r ${vibe.gradient} text-white shadow-lg`
+                              ? `bg-gradient-to-r ${currentTheme.gradient} text-white shadow-lg`
                               : "hover:shadow-md"
                           }`}
                           onClick={() => setSelectedVibe(vibe.value)}
@@ -708,19 +932,21 @@ export default function Component() {
                     <Textarea
                       id="custom-prompt"
                       placeholder={
-                        language === "km" ? "បន្ថែមសេចក្តីណែនាំជាក់លាក់..." : "Add specific instructions for your caption..."
+                        language === "km"
+                          ? "បន្ថែមសេចក្តីណែនាំជាក់លាក់... (ព័ត៌មានក្រុមហ៊ុនរបស់អ្នកនឹងត្រូវបានរួមបញ្ចូលដោយស្វ័យប្រវត្តិ)"
+                          : "Add specific instructions... (Your company profile will be automatically included)"
                       }
                       value={customPrompt}
                       onChange={(e) => setCustomPrompt(e.target.value)}
                       rows={3}
-                      className="bg-white/50 dark:bg-gray-700/50"
+                      className="bg-gray-50 dark:bg-gray-800"
                     />
                   </div>
 
                   <Button
                     onClick={analyzeImage}
                     disabled={isAnalyzing}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg"
+                    className={`w-full bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90 shadow-lg`}
                     size="lg"
                   >
                     {isAnalyzing ? (
@@ -743,15 +969,15 @@ export default function Component() {
           {/* Right Column - Generated Captions */}
           <div className="space-y-6">
             {captions.length > 0 && (
-              <Card className="border-0 shadow-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl">
+              <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Heart className="w-5 h-5 text-purple-600" />
+                  <CardTitle className="flex items-center gap-2 text-black dark:text-white">
+                    <Heart className="w-5 h-5" />
                     {t[language].generatedCaptions}
                   </CardTitle>
                   <div className="flex gap-2">
                     {selectedVibeOption && (
-                      <Badge className={`bg-gradient-to-r ${selectedVibeOption.gradient} text-white border-0`}>
+                      <Badge className={`bg-gradient-to-r ${currentTheme.gradient} text-white border-0`}>
                         <selectedVibeOption.icon className="w-3 h-3 mr-1" />
                         {language === "km" ? selectedVibeOption.label : selectedVibeOption.labelEn}
                       </Badge>
@@ -766,15 +992,17 @@ export default function Component() {
                     {captions.map((caption, index) => (
                       <Card
                         key={index}
-                        className={`cursor-pointer transition-all border-0 ${
+                        className={`cursor-pointer transition-all border ${
                           selectedCaption === caption
-                            ? "ring-2 ring-purple-500 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 shadow-lg"
-                            : "hover:shadow-md bg-white/50 dark:bg-gray-700/50"
+                            ? `ring-2 ring-gray-400 dark:ring-gray-600 bg-gray-50 dark:bg-gray-800 shadow-lg`
+                            : "hover:shadow-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
                         }`}
                         onClick={() => setSelectedCaption(caption)}
                       >
                         <CardContent className="p-4">
-                          <div className="text-sm leading-relaxed whitespace-pre-wrap">{caption}</div>
+                          <div className="text-sm leading-relaxed whitespace-pre-wrap text-black dark:text-white">
+                            {caption}
+                          </div>
                           <div className="flex justify-end mt-3">
                             <Button
                               variant="ghost"
@@ -793,18 +1021,18 @@ export default function Component() {
                   </div>
 
                   {selectedCaption && (
-                    <div className="space-y-3 pt-4 border-t">
+                    <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                       <Label htmlFor="selected-caption">{t[language].editCaption}</Label>
                       <Textarea
                         id="selected-caption"
                         value={selectedCaption}
                         onChange={(e) => setSelectedCaption(e.target.value)}
                         rows={6}
-                        className="resize-none bg-white/50 dark:bg-gray-700/50"
+                        className="resize-none bg-gray-50 dark:bg-gray-800"
                       />
                       <Button
                         onClick={() => copyToClipboard(selectedCaption)}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        className={`w-full bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
                       >
                         <Copy className="w-4 h-4 mr-2" />
                         {t[language].copyCaption}
@@ -828,61 +1056,56 @@ function CompanyProfileForm({
   onSave,
   isSaving,
   language,
+  t,
+  currentTheme,
 }: {
   profile: CompanyProfile
   setProfile: (profile: CompanyProfile) => void
   onSave: () => void
   isSaving: boolean
   language: "km" | "en"
+  t: any
+  currentTheme: any
 }) {
   const handleMarketingGoalsChange = (goal: string, checked: boolean) => {
     const goals = checked ? [...profile.marketing_goals, goal] : profile.marketing_goals.filter((g) => g !== goal)
     setProfile({ ...profile, marketing_goals: goals })
   }
 
-  const marketingGoals = [
-    "Brand Awareness",
-    "Lead Generation",
-    "Sales",
-    "Engagement",
-    "Community Building",
-    "Customer Retention",
-    "Product Launch",
-  ]
-
   return (
     <div className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="basic">Basic Info</TabsTrigger>
-          <TabsTrigger value="brand">Brand & Voice</TabsTrigger>
-          <TabsTrigger value="goals">Goals & Strategy</TabsTrigger>
+          <TabsTrigger value="basic">{t[language].basicInfo}</TabsTrigger>
+          <TabsTrigger value="brand">{t[language].brandVoice}</TabsTrigger>
+          <TabsTrigger value="goals">{t[language].goalsStrategy}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="company-name">Company Name</Label>
+              <Label htmlFor="company-name">{t[language].companyName}</Label>
               <Input
                 id="company-name"
                 value={profile.company_name}
                 onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
-                placeholder="Your company name"
+                placeholder={language === "km" ? "ឈ្មោះក្រុមហ៊ុនរបស់អ្នក" : "Your company name"}
+                className="bg-gray-50 dark:bg-gray-800"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="business-type">Business Type</Label>
+              <Label htmlFor="business-type">{t[language].businessType}</Label>
               <Select
                 value={profile.business_type}
                 onValueChange={(value) => setProfile({ ...profile, business_type: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select business type" />
+                <SelectTrigger className="bg-gray-50 dark:bg-gray-800">
+                  <SelectValue placeholder={language === "km" ? "ជ្រើសរើសប្រភេទអាជីវកម្ម" : "Select business type"} />
                 </SelectTrigger>
                 <SelectContent>
                   {BUSINESS_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
+                    <SelectItem key={type.value} value={type.value}>
+                      {language === "km" ? type.label : type.labelEn}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -891,42 +1114,48 @@ function CompanyProfileForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Company Description</Label>
+            <Label htmlFor="description">{t[language].companyDescription}</Label>
             <Textarea
               id="description"
               value={profile.description}
               onChange={(e) => setProfile({ ...profile, description: e.target.value })}
               rows={4}
-              placeholder="Describe what your company does, your mission, and what makes you unique..."
+              placeholder={
+                language === "km"
+                  ? "ពិពណ៌នាអំពីអ្វីដែលក្រុមហ៊ុនរបស់អ្នកធ្វើ បេសកកម្ម និងអ្វីដែលធ្វើឱ្យអ្នកពិសេស..."
+                  : "Describe what your company does, your mission, and what makes you unique..."
+              }
+              className="bg-gray-50 dark:bg-gray-800"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="company-size">Company Size</Label>
+              <Label htmlFor="company-size">{t[language].companySize}</Label>
               <Select
                 value={profile.company_size}
                 onValueChange={(value) => setProfile({ ...profile, company_size: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select company size" />
+                <SelectTrigger className="bg-gray-50 dark:bg-gray-800">
+                  <SelectValue placeholder={language === "km" ? "ជ្រើសរើសទំហំក្រុមហ៊ុន" : "Select company size"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1-10">1-10 employees</SelectItem>
-                  <SelectItem value="11-50">11-50 employees</SelectItem>
-                  <SelectItem value="51-200">51-200 employees</SelectItem>
-                  <SelectItem value="201-1000">201-1000 employees</SelectItem>
-                  <SelectItem value="1000+">1000+ employees</SelectItem>
+                  {COMPANY_SIZES.map((size) => (
+                    <SelectItem key={size.value} value={size.value}>
+                      {language === "km" ? size.label : size.labelEn}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="website-url">Website URL</Label>
+              <Label htmlFor="website-url">{t[language].websiteUrl}</Label>
               <Input
                 id="website-url"
                 value={profile.website_url}
                 onChange={(e) => setProfile({ ...profile, website_url: e.target.value })}
                 placeholder="https://yourwebsite.com"
+                className="bg-gray-50 dark:bg-gray-800"
               />
             </div>
           </div>
@@ -935,36 +1164,36 @@ function CompanyProfileForm({
         <TabsContent value="brand" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="target-audience">Target Audience</Label>
+              <Label htmlFor="target-audience">{t[language].targetAudience}</Label>
               <Select
                 value={profile.target_audience}
                 onValueChange={(value) => setProfile({ ...profile, target_audience: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select target audience" />
+                <SelectTrigger className="bg-gray-50 dark:bg-gray-800">
+                  <SelectValue placeholder={language === "km" ? "ជ្រើសរើសទស្សនិកជនគោលដៅ" : "Select target audience"} />
                 </SelectTrigger>
                 <SelectContent>
                   {TARGET_AUDIENCES.map((audience) => (
-                    <SelectItem key={audience} value={audience}>
-                      {audience}
+                    <SelectItem key={audience.value} value={audience.value}>
+                      {language === "km" ? audience.label : audience.labelEn}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="brand-voice">Brand Voice</Label>
+              <Label htmlFor="brand-voice">{t[language].brandVoiceLabel}</Label>
               <Select
                 value={profile.brand_voice}
                 onValueChange={(value) => setProfile({ ...profile, brand_voice: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select brand voice" />
+                <SelectTrigger className="bg-gray-50 dark:bg-gray-800">
+                  <SelectValue placeholder={language === "km" ? "ជ្រើសរើសសំឡេងម៉ាក" : "Select brand voice"} />
                 </SelectTrigger>
                 <SelectContent>
                   {BRAND_VOICES.map((voice) => (
-                    <SelectItem key={voice} value={voice}>
-                      {voice}
+                    <SelectItem key={voice.value} value={voice.value}>
+                      {language === "km" ? voice.label : voice.labelEn}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -974,63 +1203,75 @@ function CompanyProfileForm({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="brand-colors">Brand Colors</Label>
+              <Label htmlFor="brand-colors">{t[language].brandColors}</Label>
               <Input
                 id="brand-colors"
                 value={profile.brand_colors}
                 onChange={(e) => setProfile({ ...profile, brand_colors: e.target.value })}
-                placeholder="e.g., Blue, Gold, White"
+                placeholder={language === "km" ? "ឧ. ខៀវ ទង ស" : "e.g., Blue, Gold, White"}
+                className="bg-gray-50 dark:bg-gray-800"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="social-handles">Social Media Handles</Label>
+              <Label htmlFor="social-handles">{t[language].socialHandles}</Label>
               <Input
                 id="social-handles"
                 value={profile.social_handles}
                 onChange={(e) => setProfile({ ...profile, social_handles: e.target.value })}
                 placeholder="@yourhandle, @company_fb"
+                className="bg-gray-50 dark:bg-gray-800"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="unique-selling-points">Unique Selling Points</Label>
+            <Label htmlFor="unique-selling-points">{t[language].uniqueSellingPoints}</Label>
             <Textarea
               id="unique-selling-points"
               value={profile.unique_selling_points}
               onChange={(e) => setProfile({ ...profile, unique_selling_points: e.target.value })}
               rows={3}
-              placeholder="What makes your company different? Key benefits, awards, certifications..."
+              placeholder={
+                language === "km"
+                  ? "អ្វីដែលធ្វើឱ្យក្រុមហ៊ុនរបស់អ្នកខុសគេ? អត្ថប្រយោជន៍សំខាន់ៗ រង្វាន់ វិញ្ញាបនបត្រ..."
+                  : "What makes your company different? Key benefits, awards, certifications..."
+              }
+              className="bg-gray-50 dark:bg-gray-800"
             />
           </div>
         </TabsContent>
 
         <TabsContent value="goals" className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="industry-focus">Industry Focus</Label>
+            <Label htmlFor="industry-focus">{t[language].industryFocus}</Label>
             <Textarea
               id="industry-focus"
               value={profile.industry_focus}
               onChange={(e) => setProfile({ ...profile, industry_focus: e.target.value })}
               rows={3}
-              placeholder="Describe your industry focus, specializations, and market position..."
+              placeholder={
+                language === "km"
+                  ? "ពិពណ៌នាការផ្តោតលើឧស្សាហកម្ម ជំនាញ និងទីតាំងទីផ្សាររបស់អ្នក..."
+                  : "Describe your industry focus, specializations, and market position..."
+              }
+              className="bg-gray-50 dark:bg-gray-800"
             />
           </div>
 
           <div className="space-y-3">
-            <Label>Marketing Goals</Label>
+            <Label>{t[language].marketingGoals}</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {marketingGoals.map((goal) => (
-                <div key={goal} className="flex items-center space-x-2">
+              {MARKETING_GOALS.map((goal) => (
+                <div key={goal.value} className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    id={goal}
-                    checked={profile.marketing_goals.includes(goal)}
-                    onChange={(e) => handleMarketingGoalsChange(goal, e.target.checked)}
+                    id={goal.value}
+                    checked={profile.marketing_goals.includes(goal.value)}
+                    onChange={(e) => handleMarketingGoalsChange(goal.value, e.target.checked)}
                     className="rounded border-gray-300"
                   />
-                  <Label htmlFor={goal} className="text-sm">
-                    {goal}
+                  <Label htmlFor={goal.value} className="text-sm">
+                    {language === "km" ? goal.label : goal.labelEn}
                   </Label>
                 </div>
               ))}
@@ -1042,17 +1283,17 @@ function CompanyProfileForm({
       <Button
         onClick={onSave}
         disabled={isSaving}
-        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+        className={`w-full bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
       >
         {isSaving ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Saving...
+            {language === "km" ? "កំពុងរក្សាទុក..." : "Saving..."}
           </>
         ) : (
           <>
             <Building2 className="w-4 h-4 mr-2" />
-            Save Profile
+            {t[language].saveProfile}
           </>
         )}
       </Button>

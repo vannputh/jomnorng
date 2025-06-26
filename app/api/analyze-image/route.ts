@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { image, vibe, customPrompt, companyProfile, regenerate } = await request.json()
+    const { image, vibe, customPrompt, companyProfile, regenerate, language } = await request.json()
 
     if (!image) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 })
@@ -36,14 +36,21 @@ export async function POST(request: NextRequest) {
     const companyContext =
       companyProfile && companyProfile.company_name
         ? `
-Company Information:
+COMPANY PROFILE INFORMATION:
 - Company Name: ${companyProfile.company_name}
 - Business Type: ${companyProfile.business_type}
 - Description: ${companyProfile.description}
 - Target Audience: ${companyProfile.target_audience}
 - Brand Voice: ${companyProfile.brand_voice}
+- Company Size: ${companyProfile.company_size}
+- Industry Focus: ${companyProfile.industry_focus}
+- Marketing Goals: ${companyProfile.marketing_goals?.join(", ")}
+- Brand Colors: ${companyProfile.brand_colors}
+- Website: ${companyProfile.website_url}
+- Social Handles: ${companyProfile.social_handles}
+- Unique Selling Points: ${companyProfile.unique_selling_points}
 
-Please incorporate this company information naturally into the captions to make them more personalized and relevant to the business.
+IMPORTANT: Use this company information to create personalized, relevant captions that align with the company's brand, voice, and goals. Mention the company naturally when appropriate and ensure the captions reflect their business type and target audience.
 `
         : ""
 
@@ -53,22 +60,24 @@ ${companyContext}
 
 IMPORTANT FORMAT REQUIREMENTS:
 - Each caption must start with "[English Below]" 
-- Then write the Khmer text (2-3 sentences, detailed and engaging)
-- Then write the English text below the Khmer (2-3 sentences, detailed and engaging)
-- End with 5-8 relevant hashtags in both languages (#ខ្មែរ #English)
-- Make the captions longer and more detailed (150-250 characters each language)
+- Then write the Khmer text (3-4 sentences, detailed and engaging, incorporating company context when relevant)
+- Then write the English text below the Khmer (3-4 sentences, detailed and engaging, incorporating company context when relevant)
+- End with 8-12 relevant hashtags in both languages (#ខ្មែរ #English)
+- Make the captions longer and more detailed (200-300 characters each language)
 - Focus on what's actually visible in the image
 - Make them shareable and likely to get engagement
+- If company profile is provided, naturally incorporate the business context, brand voice, and target audience
+- Use the company's brand colors, unique selling points, and marketing goals to enhance the captions
 
-${customPrompt ? `Additional instructions: ${customPrompt}` : ""}
+${customPrompt ? `Additional custom instructions: ${customPrompt}` : ""}
 
 ${regenerate ? "Generate completely new and different captions from any previous ones." : ""}
 
 Example format:
 [English Below]
-ខ្មែរ text here with detailed description and engaging content...
-English text here with detailed description and engaging content...
-#hashtag1 #hashtag2 #ខ្មែរ #English
+ខ្មែរ text here with detailed description, company context, and engaging content that reflects the brand voice and appeals to the target audience...
+English text here with detailed description, company context, and engaging content that reflects the brand voice and appeals to the target audience...
+#hashtag1 #hashtag2 #ខ្មែរ #English #companyrelated #industryspecific
 
 Return only the captions, separated by double line breaks, without numbering.`
 
