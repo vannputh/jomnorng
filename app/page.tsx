@@ -38,7 +38,6 @@ import { useTheme } from "next-themes"
 
 const COLOR_THEMES = [
   { name: "Classic", value: "classic", gradient: "from-gray-600 to-gray-800", color: "bg-gray-600" },
-  { name: "Cambodian", value: "cambodian", gradient: "from-red-600 to-yellow-600", color: "bg-red-600" },
   { name: "Ocean", value: "ocean", gradient: "from-blue-600 to-cyan-600", color: "bg-blue-600" },
   { name: "Forest", value: "forest", gradient: "from-green-600 to-emerald-600", color: "bg-green-600" },
   { name: "Sunset", value: "sunset", gradient: "from-orange-600 to-pink-600", color: "bg-orange-600" },
@@ -171,6 +170,8 @@ export default function Component() {
   const { toast } = useToast()
   const { theme, setTheme } = useTheme()
   const supabase = createClient()
+  const [showFirstTimeSetup, setShowFirstTimeSetup] = useState(false)
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false)
 
   const currentTheme = COLOR_THEMES.find((t) => t.value === colorTheme) || COLOR_THEMES[0]
 
@@ -293,6 +294,7 @@ export default function Component() {
             data: {
               full_name: fullName,
             },
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         })
         if (error) throw error
@@ -387,13 +389,25 @@ export default function Component() {
 
       if (data) {
         setCompanyProfile(data)
+        setIsFirstTimeUser(false)
+      } else {
+        // No profile found - first time user
+        setIsFirstTimeUser(true)
+        setShowFirstTimeSetup(true)
       }
     } catch (error) {
-      console.log("No profile found")
+      console.log("No profile found - first time user")
+      setIsFirstTimeUser(true)
+      setShowFirstTimeSetup(true)
     }
   }
 
-  const saveCompanyProfile = async () => {
+  const skipFirstTimeSetup = () => {
+    setShowFirstTimeSetup(false)
+    setIsFirstTimeUser(false)
+  }
+
+  const saveCompanyProfile = async (isFirstTime = false) => {
     if (!user) return
 
     setIsSavingProfile(true)
@@ -405,6 +419,11 @@ export default function Component() {
 
       if (data && data[0]) {
         setCompanyProfile(data[0])
+      }
+
+      if (isFirstTime) {
+        setShowFirstTimeSetup(false)
+        setIsFirstTimeUser(false)
       }
 
       toast({
@@ -739,6 +758,72 @@ export default function Component() {
     )
   }
 
+  // First-time setup dialog
+  if (showFirstTimeSetup && currentView === "app") {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl shadow-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <CardHeader className="text-center space-y-4">
+            <div
+              className={`mx-auto w-16 h-16 bg-gradient-to-r ${currentTheme.gradient} rounded-2xl flex items-center justify-center`}
+            >
+              <Building2 className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-black dark:text-white">
+                {language === "km" ? "សូមស្វាគមន៍មកកាន់ ចំណង!" : "Welcome to Jomnorng!"}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">
+                {language === "km"
+                  ? "សូមបំពេញព័ត៌មានក្រុមហ៊ុនរបស់អ្នក ដើម្បីទទួលបានចំណងជើងដែលកំណត់តាមតម្រូវការ"
+                  : "Set up your company profile to get personalized captions"}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {language === "km"
+                  ? "អ្នកអាចរំលងជំហាននេះ ហើយបំពេញនៅពេលក្រោយ"
+                  : "You can skip this step and fill it out later"}
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent className="max-h-[60vh] overflow-y-auto">
+            <CompanyProfileForm
+              profile={companyProfile}
+              setProfile={setCompanyProfile}
+              onSave={() => saveCompanyProfile(true)}
+              isSaving={isSavingProfile}
+              language={language}
+              t={t}
+              currentTheme={currentTheme}
+              isFirstTime={true}
+            />
+            <div className="flex gap-3 mt-6">
+              <Button variant="outline" onClick={skipFirstTimeSetup} className="flex-1">
+                {language === "km" ? "រំលង" : "Skip for now"}
+              </Button>
+              <Button
+                onClick={() => saveCompanyProfile(true)}
+                disabled={isSavingProfile}
+                className={`flex-1 bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
+              >
+                {isSavingProfile ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {language === "km" ? "កំពុងរក្សាទុក..." : "Saving..."}
+                  </>
+                ) : (
+                  <>
+                    <Building2 className="w-4 h-4 mr-2" />
+                    {language === "km" ? "រក្សាទុក និងបន្ត" : "Save & Continue"}
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   // Main App
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -1058,6 +1143,7 @@ function CompanyProfileForm({
   language,
   t,
   currentTheme,
+  isFirstTime = false,
 }: {
   profile: CompanyProfile
   setProfile: (profile: CompanyProfile) => void
@@ -1066,6 +1152,7 @@ function CompanyProfileForm({
   language: "km" | "en"
   t: any
   currentTheme: any
+  isFirstTime?: boolean
 }) {
   const handleMarketingGoalsChange = (goal: string, checked: boolean) => {
     const goals = checked ? [...profile.marketing_goals, goal] : profile.marketing_goals.filter((g) => g !== goal)
@@ -1280,23 +1367,25 @@ function CompanyProfileForm({
         </TabsContent>
       </Tabs>
 
-      <Button
-        onClick={onSave}
-        disabled={isSaving}
-        className={`w-full bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
-      >
-        {isSaving ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            {language === "km" ? "កំពុងរក្សាទុក..." : "Saving..."}
-          </>
-        ) : (
-          <>
-            <Building2 className="w-4 h-4 mr-2" />
-            {t[language].saveProfile}
-          </>
-        )}
-      </Button>
+      {!isFirstTime && (
+        <Button
+          onClick={onSave}
+          disabled={isSaving}
+          className={`w-full bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              {language === "km" ? "កំពុងរក្សាទុក..." : "Saving..."}
+            </>
+          ) : (
+            <>
+              <Building2 className="w-4 h-4 mr-2" />
+              {t[language].saveProfile}
+            </>
+          )}
+        </Button>
+      )}
     </div>
   )
 }
