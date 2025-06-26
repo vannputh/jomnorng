@@ -294,16 +294,14 @@ export default function Component() {
             data: {
               full_name: fullName,
             },
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         })
         if (error) throw error
-        // Auto sign in after successful signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+        toast({
+          title: "Success!",
+          description: "Please check your email to verify your account.",
         })
-        if (signInError) throw signInError
-        setCurrentView("app")
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
