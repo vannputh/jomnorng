@@ -282,6 +282,20 @@ export default function Component() {
     },
   }
 
+  // Clear any stale auth data
+  const clearAuthData = async () => {
+    try {
+      await supabase.auth.signOut()
+      // Clear any local storage items related to auth
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("supabase.auth.token")
+        sessionStorage.clear()
+      }
+    } catch (error) {
+      console.log("Error clearing auth data:", error)
+    }
+  }
+
   // Authentication functions
   const handleAuth = async () => {
     setIsLoading(true)
@@ -322,9 +336,11 @@ export default function Component() {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    await clearAuthData()
     setUser(null)
     setCurrentView("landing")
+    setShowFirstTimeSetup(false)
+    setIsFirstTimeUser(false)
     setCompanyProfile({
       user_id: "",
       company_name: "",
@@ -345,27 +361,35 @@ export default function Component() {
   // Load user and profile
   useEffect(() => {
     const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (user) {
-        setUser({
-          id: user.id,
-          email: user.email!,
-          full_name: user.user_metadata?.full_name,
-        })
-        setCurrentView("app")
-        loadCompanyProfile(user.id)
-      } else {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (user) {
+          setUser({
+            id: user.id,
+            email: user.email!,
+            full_name: user.user_metadata?.full_name,
+          })
+          setCurrentView("app")
+          await loadCompanyProfile(user.id)
+        } else {
+          setCurrentView("landing")
+        }
+      } catch (error) {
+        console.log("Error getting user:", error)
+        await clearAuthData()
         setCurrentView("landing")
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
     getUser()
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -373,10 +397,12 @@ export default function Component() {
           full_name: session.user.user_metadata?.full_name,
         })
         setCurrentView("app")
-        loadCompanyProfile(session.user.id)
+        await loadCompanyProfile(session.user.id)
       } else {
         setUser(null)
         setCurrentView("landing")
+        setShowFirstTimeSetup(false)
+        setIsFirstTimeUser(false)
       }
     })
 
@@ -387,33 +413,84 @@ export default function Component() {
     try {
       const { data, error } = await supabase.from("company_profiles").select("*").eq("user_id", userId).single()
 
+      if (error) {
+        // Handle specific error cases
+        if (error.code === "PGRST116" || error.message.includes("No rows found")) {
+          // No profile found - first time user
+          console.log("No profile found - first time user")
+          setIsFirstTimeUser(true)
+          setShowFirstTimeSetup(true)
+          return
+        } else if (error.code === "406" || error.message.includes("Not Acceptable")) {
+          // User might be deleted from database but still has auth token
+          console.log("User not found in database, clearing auth")
+          await clearAuthData()
+          setCurrentView("landing")
+          return
+        }
+        throw error
+      }
+
       if (data) {
         setCompanyProfile(data)
         setIsFirstTimeUser(false)
-        setShowFirstTimeSetup(false) // Ensure popup doesn't show
-      } else {
-        // No profile found - first time user
-        setIsFirstTimeUser(true)
-        setShowFirstTimeSetup(true)
+        setShowFirstTimeSetup(false)
       }
-    } catch (error) {
-      console.log("No profile found - first time user")
+    } catch (error: any) {
+      console.log("Error loading profile:", error)
+      // If there's any error, treat as first time user
       setIsFirstTimeUser(true)
       setShowFirstTimeSetup(true)
     }
   }
 
-  const skipFirstTimeSetup = () => {
-    setShowFirstTimeSetup(false)
-    setIsFirstTimeUser(false)
-    // Create an empty profile to mark that setup was attempted
-    const emptyProfile = {
-      ...companyProfile,
-      user_id: user?.id || "",
-      company_name: "", // Keep it empty but save to database
+  const skipFirstTimeSetup = async () => {
+    if (!user) return
+
+    setIsSavingProfile(true)
+    try {
+      // Create a minimal empty profile to mark that setup was attempted
+      const emptyProfile = {
+        user_id: user.id,
+        company_name: "",
+        business_type: "",
+        description: "",
+        target_audience: "",
+        brand_voice: "",
+        company_size: "",
+        industry_focus: "",
+        marketing_goals: [],
+        brand_colors: "",
+        website_url: "",
+        social_handles: "",
+        unique_selling_points: "",
+      }
+
+      const { data, error } = await supabase.from("company_profiles").upsert([emptyProfile]).select()
+
+      if (error) {
+        console.log("Error saving empty profile:", error)
+        // Even if save fails, still close the popup
+      } else if (data && data[0]) {
+        setCompanyProfile(data[0])
+      }
+
+      // Always close the popup regardless of save success
+      setShowFirstTimeSetup(false)
+      setIsFirstTimeUser(false)
+
+      toast({
+        title: language === "km" ? "រំលងបានជោគជ័យ!" : "Skipped successfully!",
+        description: language === "km" ? "អ្នកអាចកំណត់ព័ត៌មានក្រុមហ៊ុននៅពេលក្រោយ" : "You can set up your company profile later.",
+      })
+    } catch (error) {
+      console.log("Error in skip setup:", error)
+      // Still close popup even on error
+      setShowFirstTimeSetup(false)
+      setIsFirstTimeUser(false)
+    } finally {
+      setIsSavingProfile(false)
     }
-    // Save empty profile to prevent popup from showing again
-    saveCompanyProfile(true)
   }
 
   const saveCompanyProfile = async (isFirstTime = false) => {
@@ -806,8 +883,17 @@ export default function Component() {
               isFirstTime={true}
             />
             <div className="flex gap-3 mt-6">
-              <Button variant="outline" onClick={skipFirstTimeSetup} className="flex-1">
-                {language === "km" ? "រំលង" : "Skip for now"}
+              <Button variant="outline" onClick={skipFirstTimeSetup} className="flex-1" disabled={isSavingProfile}>
+                {isSavingProfile ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {language === "km" ? "កំពុងរំលង..." : "Skipping..."}
+                  </>
+                ) : language === "km" ? (
+                  "រំលង"
+                ) : (
+                  "Skip for now"
+                )}
               </Button>
               <Button
                 onClick={() => saveCompanyProfile(true)}
