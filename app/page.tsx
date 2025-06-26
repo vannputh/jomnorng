@@ -294,14 +294,16 @@ export default function Component() {
             data: {
               full_name: fullName,
             },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         })
         if (error) throw error
-        toast({
-          title: "Success!",
-          description: "Please check your email to verify your account.",
+        // Auto sign in after successful signup
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
         })
+        if (signInError) throw signInError
+        setCurrentView("app")
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -390,6 +392,7 @@ export default function Component() {
       if (data) {
         setCompanyProfile(data)
         setIsFirstTimeUser(false)
+        setShowFirstTimeSetup(false) // Ensure popup doesn't show
       } else {
         // No profile found - first time user
         setIsFirstTimeUser(true)
@@ -405,6 +408,14 @@ export default function Component() {
   const skipFirstTimeSetup = () => {
     setShowFirstTimeSetup(false)
     setIsFirstTimeUser(false)
+    // Create an empty profile to mark that setup was attempted
+    const emptyProfile = {
+      ...companyProfile,
+      user_id: user?.id || "",
+      company_name: "", // Keep it empty but save to database
+    }
+    // Save empty profile to prevent popup from showing again
+    saveCompanyProfile(true)
   }
 
   const saveCompanyProfile = async (isFirstTime = false) => {
