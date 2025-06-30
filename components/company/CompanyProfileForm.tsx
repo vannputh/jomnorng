@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2, Building2 } from "lucide-react"
-import type { Language, ColorTheme, CompanyProfile } from "@/lib/types"
+import type { Language, CompanyProfile } from "@/lib/types"
 import {
   BUSINESS_TYPES,
   TARGET_AUDIENCES,
@@ -24,7 +24,6 @@ interface CompanyProfileFormProps {
   onSave: () => void
   isSaving: boolean
   language: Language
-  currentTheme: ColorTheme
   isFirstTime?: boolean
 }
 
@@ -34,7 +33,6 @@ export default function CompanyProfileForm({
   onSave,
   isSaving,
   language,
-  currentTheme,
   isFirstTime = false,
 }: CompanyProfileFormProps) {
   const t = getTranslations(language)
@@ -256,7 +254,7 @@ export default function CompanyProfileForm({
         <Button
           onClick={onSave}
           disabled={isSaving}
-          className={`w-full bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
+          className="w-full"
         >
           {isSaving ? (
             <>

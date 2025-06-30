@@ -7,7 +7,6 @@ import LandingPage from "@/components/landing/LandingPage"
 
 export default function HomePage() {
   const [language, setLanguage] = useState<Language>("km")
-  const [colorTheme, setColorTheme] = useState("classic")
   const router = useRouter()
 
   const handleGetStarted = () => {
@@ -18,8 +17,6 @@ export default function HomePage() {
     <LandingPage
       language={language}
       setLanguage={setLanguage}
-      colorTheme={colorTheme}
-      setColorTheme={setColorTheme}
       onGetStarted={handleGetStarted}
     />
   )

@@ -39,7 +39,7 @@ export function useCompanyProfile(language: Language) {
         .from("company_profiles")
         .select("*")
         .eq("user_id", userId)
-        .maybeSingle() // Use maybeSingle instead of single to avoid errors when no data
+        .maybeSingle()
 
       if (error) {
         console.error("Database error loading profile:", {
@@ -58,7 +58,6 @@ export function useCompanyProfile(language: Language) {
       } else {
         console.log("No profile found - first time user")
         setIsFirstTimeUser(true)
-        // Reset to default profile with user_id
         setCompanyProfile({
           user_id: userId,
           company_name: "",
@@ -85,7 +84,6 @@ export function useCompanyProfile(language: Language) {
         userId: userId
       })
       setIsFirstTimeUser(true)
-      // Set user_id in the empty profile even on error
       setCompanyProfile(prev => ({ ...prev, user_id: userId }))
       if (!skipRedirect) {
         router.push("/setup")
@@ -95,27 +93,56 @@ export function useCompanyProfile(language: Language) {
     }
   }, [supabase, router])
 
+  // Manual upsert function that doesn't rely on database constraints
   const saveCompanyProfile = async (redirectToDashboard = false) => {
     if (!supabase) return
     
     setIsSaving(true)
     try {
-      // Ensure user_id is set
       if (!companyProfile.user_id) {
         throw new Error("User ID is required to save company profile")
       }
       
       console.log("Saving company profile:", companyProfile)
       
-      // Use upsert with the unique constraint on user_id
-      // This will insert if no profile exists, or update if one exists
-      const { data, error } = await supabase
+      // First, check if profile exists
+      const { data: existingProfile, error: checkError } = await supabase
         .from("company_profiles")
-        .upsert([companyProfile as any], {
-          onConflict: 'user_id'
-        })
-        .select()
-        .single()
+        .select("id")
+        .eq("user_id", companyProfile.user_id)
+        .maybeSingle()
+
+      if (checkError) {
+        console.error("Error checking existing profile:", checkError)
+        throw checkError
+      }
+
+      let data, error
+
+      if (existingProfile) {
+        // Update existing profile
+        console.log("Updating existing profile with id:", existingProfile.id)
+        const result = await supabase
+          .from("company_profiles")
+          .update(companyProfile as any)
+          .eq("user_id", companyProfile.user_id)
+          .select()
+          .single()
+        
+        data = result.data
+        error = result.error
+      } else {
+        // Insert new profile
+        console.log("Creating new profile")
+        const result = await supabase
+          .from("company_profiles")
+          .insert([companyProfile as any])
+          .select()
+          .single()
+        
+        data = result.data
+        error = result.error
+      }
 
       if (error) {
         console.error("Error saving profile:", {
@@ -159,23 +186,42 @@ export function useCompanyProfile(language: Language) {
     
     setIsSaving(true)
     try {
-      // Create a minimal profile to mark setup as complete
       const minimalProfile = {
         ...companyProfile,
-        company_name: companyProfile.company_name || "My Company", // Ensure we have a company name
+        company_name: companyProfile.company_name || "My Company",
       }
 
-      const { data, error } = await supabase
+      // Use the same manual upsert logic
+      const { data: existingProfile } = await supabase
         .from("company_profiles")
-        .upsert([minimalProfile as any], {
-          onConflict: 'user_id'
-        })
-        .select()
-        .single()
+        .select("id")
+        .eq("user_id", companyProfile.user_id)
+        .maybeSingle()
+
+      let data, error
+
+      if (existingProfile) {
+        const result = await supabase
+          .from("company_profiles")
+          .update(minimalProfile as any)
+          .eq("user_id", companyProfile.user_id)
+          .select()
+          .single()
+        data = result.data
+        error = result.error
+      } else {
+        const result = await supabase
+          .from("company_profiles")
+          .insert([minimalProfile as any])
+          .select()
+          .single()
+        data = result.data
+        error = result.error
+      }
 
       if (error) {
         console.error("Error saving minimal profile:", error)
-        throw error
+        // Don't throw error for skip - just proceed
       }
 
       if (data) {
@@ -192,7 +238,6 @@ export function useCompanyProfile(language: Language) {
       router.push("/dashboard")
     } catch (error) {
       console.error("Error in skip setup:", error)
-      // Still redirect to dashboard even if save fails
       router.push("/dashboard")
     } finally {
       setIsSaving(false)

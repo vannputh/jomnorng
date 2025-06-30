@@ -17,4 +17,16 @@ export { default as LandingPage } from "./landing/LandingPage"
 export { default as FeatureCard } from "./landing/FeatureCard"
 
 // Layout components
-export { default as Header } from "./layout/Header" 
+export { default as Header } from "./layout/Header"
+export { default as HamburgerMenu } from "./layout/HamburgerMenu"
+export { default as Footer } from "./layout/Footer"
+
+export { ThemeProvider } from "./theme-provider"
+
+// Dashboard components
+export { default as DashboardAnalytics } from "./dashboard/DashboardAnalytics"
+export { default as CaptionsLibrary } from "./dashboard/CaptionsLibrary"
+export { default as QuickTemplates } from "./dashboard/QuickTemplates"
+
+// UI Components
+export { Stepper } from "./ui/stepper" 

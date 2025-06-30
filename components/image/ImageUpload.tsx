@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Camera, Upload } from "lucide-react"
 import Image from "next/image"
-import type { Language, ColorTheme } from "@/lib/types"
+import type { Language } from "@/lib/types"
 import { getTranslations } from "@/lib/translations"
 import { useToast } from "@/hooks/use-toast"
 
@@ -13,7 +13,6 @@ interface ImageUploadProps {
   image: string | null
   setImage: (image: string | null) => void
   language: Language
-  currentTheme: ColorTheme
   onReset: () => void
 }
 
@@ -21,7 +20,6 @@ export default function ImageUpload({
   image,
   setImage,
   language,
-  currentTheme,
   onReset,
 }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -89,7 +87,7 @@ export default function ImageUpload({
         {!image ? (
           <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center space-y-4 bg-gray-50 dark:bg-gray-800">
             <div
-              className={`w-16 h-16 mx-auto bg-gradient-to-r ${currentTheme.gradient} rounded-2xl flex items-center justify-center`}
+              className="w-16 h-16 mx-auto bg-primary rounded-2xl flex items-center justify-center"
             >
               <Upload className="w-8 h-8 text-white" />
             </div>
@@ -102,7 +100,6 @@ export default function ImageUpload({
             <div className="flex gap-3 justify-center">
               <Button
                 onClick={() => fileInputRef.current?.click()}
-                className={`bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 {t.chooseFile}
@@ -123,18 +120,22 @@ export default function ImageUpload({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="relative rounded-xl overflow-hidden shadow-lg">
-              <Image
-                src={image || "/placeholder.svg"}
-                alt="Uploaded image"
-                width={800}
-                height={600}
-                className="w-full h-auto max-h-96 object-cover"
-              />
+            <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-100 dark:bg-gray-800">
+              <div className="aspect-video w-full max-w-md mx-auto">
+                <Image
+                  src={image || "/placeholder.svg"}
+                  alt="Uploaded image"
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
             </div>
-            <Button variant="outline" onClick={onReset}>
-              {t.uploadDifferent}
-            </Button>
+            <div className="text-center">
+              <Button variant="outline" onClick={onReset} className="w-full max-w-xs">
+                {t.uploadDifferent}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>

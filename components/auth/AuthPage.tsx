@@ -7,13 +7,11 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Sparkles } from "lucide-react"
-import type { Language, AuthMode, ColorTheme } from "@/lib/types"
+import type { Language, AuthMode } from "@/lib/types"
 import { getTranslations } from "@/lib/translations"
 
 interface AuthPageProps {
   language: Language
-  colorTheme: string
-  currentTheme: ColorTheme
   onBack: () => void
   onAuth: (authMode: AuthMode, email: string, password: string, fullName?: string) => void
   isLoading: boolean
@@ -21,8 +19,6 @@ interface AuthPageProps {
 
 export default function AuthPage({
   language,
-  colorTheme,
-  currentTheme,
   onBack,
   onAuth,
   isLoading,
@@ -46,10 +42,8 @@ export default function AuthPage({
           <Button variant="ghost" onClick={onBack} className="absolute top-4 left-4 p-2">
             ← Back
           </Button>
-          <div
-            className={`mx-auto w-16 h-16 bg-gradient-to-r ${currentTheme.gradient} rounded-2xl flex items-center justify-center`}
-          >
-            <Sparkles className="w-8 h-8 text-white" />
+          <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-black dark:text-white">
@@ -121,7 +115,7 @@ export default function AuthPage({
           <Button
             onClick={handleSubmit}
             disabled={isLoading}
-            className={`w-full bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
+            className="w-full"
           >
             {authMode === "login" ? t.login : t.signup}
           </Button>
