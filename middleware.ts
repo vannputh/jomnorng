@@ -72,7 +72,9 @@ export async function middleware(request: NextRequest) {
 
   // Redirect to auth if accessing protected route without authentication
   if (isProtectedPath && !user) {
-    return NextResponse.redirect(new URL('/auth', request.url))
+    const redirectUrl = new URL('/auth', request.url)
+    redirectUrl.searchParams.set('next', request.nextUrl.pathname)
+    return NextResponse.redirect(redirectUrl)
   }
 
   // Redirect to dashboard if accessing auth route while authenticated

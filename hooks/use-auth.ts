@@ -52,7 +52,11 @@ export function useAuth() {
           password,
         })
         if (error) throw error
-        router.push("/dashboard")
+        
+        // Get the intended redirect URL from URL params
+        const urlParams = new URLSearchParams(window.location.search)
+        const next = urlParams.get('next') || '/dashboard'
+        router.push(next)
       }
     } catch (error: any) {
       toast({
