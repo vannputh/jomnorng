@@ -35,6 +35,7 @@ export default function AuthPage({
   const t = getTranslations(language)
 
   const handleSubmit = () => {
+    console.log("AuthPage handleSubmit called with:", { authMode, email, password: "***" })
     onAuth(authMode, email, password, fullName)
   }
 

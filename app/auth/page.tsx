@@ -13,6 +13,8 @@ export default function AuthPageRoute() {
   const router = useRouter()
   const { handleAuth, isLoading } = useAuth()
 
+  console.log("AuthPageRoute: handleAuth function exists:", typeof handleAuth === 'function')
+
   const currentTheme = COLOR_THEMES.find((t) => t.value === colorTheme) || COLOR_THEMES[0]
 
   const handleBack = () => {
