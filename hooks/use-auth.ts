@@ -53,10 +53,8 @@ export function useAuth() {
         })
         if (error) throw error
         
-        // Get the intended redirect URL from URL params
-        const urlParams = new URLSearchParams(window.location.search)
-        const next = urlParams.get('next') || '/dashboard'
-        router.push(next)
+        // Don't redirect immediately - let the auth state change handle it
+        // The onAuthStateChange listener will detect the login and redirect appropriately
       }
     } catch (error: any) {
       toast({
@@ -110,9 +108,24 @@ export function useAuth() {
           email: session.user.email!,
           full_name: session.user.user_metadata?.full_name,
         })
+        
+        // Handle redirect after successful login
+        if (event === 'SIGNED_IN' && typeof window !== 'undefined') {
+          // Get the intended redirect URL from URL params or default to dashboard
+          const urlParams = new URLSearchParams(window.location.search)
+          const next = urlParams.get('next') || '/dashboard'
+          
+          // Only redirect if we're currently on the auth page
+          if (window.location.pathname === '/auth') {
+            router.push(next)
+          }
+        }
       } else {
         setUser(null)
       }
+      
+      // Ensure loading state is updated
+      setIsLoading(false)
     })
 
     return () => subscription.unsubscribe()
