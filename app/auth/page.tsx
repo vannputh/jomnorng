@@ -3,17 +3,16 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
-import { COLOR_THEMES } from "@/lib/constants"
+
 import type { Language } from "@/lib/types"
 import AuthPage from "@/components/auth/AuthPage"
 
 export default function AuthPageRoute() {
   const [language, setLanguage] = useState<Language>("km")
-  const [colorTheme, setColorTheme] = useState("classic")
   const router = useRouter()
   const { handleAuth, isLoading } = useAuth()
 
-  const currentTheme = COLOR_THEMES.find((t) => t.value === colorTheme) || COLOR_THEMES[0]
+  console.log("AuthPageRoute: handleAuth function exists:", typeof handleAuth === 'function')
 
   const handleBack = () => {
     router.push("/")
@@ -22,8 +21,6 @@ export default function AuthPageRoute() {
   return (
     <AuthPage
       language={language}
-      colorTheme={colorTheme}
-      currentTheme={currentTheme}
       onBack={handleBack}
       onAuth={handleAuth}
       isLoading={isLoading}

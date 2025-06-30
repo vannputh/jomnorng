@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
@@ -10,6 +10,7 @@ export function useAuth() {
   const router = useRouter()
   const { toast } = useToast()
   const supabase = typeof window !== "undefined" ? createClient() : null
+
 
   const clearAuthData = async () => {
     try {
@@ -26,6 +27,8 @@ export function useAuth() {
   }
 
   const handleAuth = async (authMode: AuthMode, email: string, password: string, fullName?: string) => {
+    console.log("handleAuth called with:", { authMode, email, password: "***", fullName })
+    
     if (!supabase) return
     
     setIsLoading(true)
@@ -52,7 +55,15 @@ export function useAuth() {
           password,
         })
         if (error) throw error
-        router.push("/dashboard")
+        
+        // Direct redirect after successful login
+        const urlParams = new URLSearchParams(window.location.search)
+        const next = urlParams.get('next') || '/dashboard'
+        console.log("Login successful, redirecting to:", next)
+        
+        // Use window.location.replace for immediate redirect
+        window.location.replace(next)
+        return
       }
     } catch (error: any) {
       toast({
@@ -100,19 +111,48 @@ export function useAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change:", event, session?.user ? "User present" : "No user")
+      
       if (session?.user) {
-        setUser({
+        const newUser = {
           id: session.user.id,
           email: session.user.email!,
           full_name: session.user.user_metadata?.full_name,
-        })
+        }
+        setUser(newUser)
       } else {
         setUser(null)
       }
+      
+      // Ensure loading state is updated
+      setIsLoading(false)
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [router])
+
+  // Client-side route protection and redirects
+  useEffect(() => {
+    if (typeof window === "undefined" || isLoading) return
+    
+    const currentPath = window.location.pathname
+    const protectedPaths = ['/dashboard', '/setup']
+    const isProtectedPath = protectedPaths.some(path => currentPath.startsWith(path))
+    const isOnAuthPage = currentPath === '/auth'
+    
+    if (isProtectedPath && !user) {
+      // Redirect unauthenticated users from protected routes to auth
+      console.log("Unauthenticated user on protected route, redirecting to auth...")
+      const redirectUrl = `/auth?next=${encodeURIComponent(currentPath)}`
+      window.location.replace(redirectUrl)
+    } else if (isOnAuthPage && user) {
+      // Redirect authenticated users away from auth page
+      console.log("Authenticated user on auth page, redirecting...")
+      const urlParams = new URLSearchParams(window.location.search)
+      const next = urlParams.get('next') || '/dashboard'
+      window.location.replace(next)
+    }
+  }, [user, isLoading])
 
   return {
     user,

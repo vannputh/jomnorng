@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2, Sparkles, Palette } from "lucide-react"
-import type { Language, ColorTheme, CompanyProfile } from "@/lib/types"
+import type { Language, CompanyProfile } from "@/lib/types"
 import { VIBE_OPTIONS } from "@/lib/constants"
 import { getTranslations } from "@/lib/translations"
 
@@ -16,7 +16,6 @@ interface VibeSelectionProps {
   customPrompt: string
   setCustomPrompt: (prompt: string) => void
   language: Language
-  currentTheme: ColorTheme
   onAnalyze: () => void
   isAnalyzing: boolean
 }
@@ -27,7 +26,6 @@ export default function VibeSelection({
   customPrompt,
   setCustomPrompt,
   language,
-  currentTheme,
   onAnalyze,
   isAnalyzing,
 }: VibeSelectionProps) {
@@ -51,7 +49,7 @@ export default function VibeSelection({
                 variant={selectedVibe === vibe.value ? "default" : "outline"}
                 className={`h-auto p-4 flex flex-col gap-2 transition-all ${
                   selectedVibe === vibe.value
-                    ? `bg-gradient-to-r ${currentTheme.gradient} text-white shadow-lg`
+                    ? "bg-primary text-primary-foreground shadow-lg"
                     : "hover:shadow-md"
                 }`}
                 onClick={() => setSelectedVibe(vibe.value)}
@@ -82,7 +80,7 @@ export default function VibeSelection({
         <Button
           onClick={onAnalyze}
           disabled={isAnalyzing}
-          className={`w-full bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90 shadow-lg`}
+          className="w-full shadow-lg"
           size="lg"
         >
           {isAnalyzing ? (

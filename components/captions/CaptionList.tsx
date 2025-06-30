@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Copy, RefreshCw, Heart, Loader2 } from "lucide-react"
-import type { Language, ColorTheme, VibeOption } from "@/lib/types"
+import type { Language, VibeOption } from "@/lib/types"
 import { getTranslations } from "@/lib/translations"
 
 interface CaptionListProps {
@@ -16,7 +16,6 @@ interface CaptionListProps {
   setSelectedCaption: (caption: string) => void
   selectedVibeOption: VibeOption | undefined
   language: Language
-  currentTheme: ColorTheme
   onRefresh: () => void
   onCopy: (text: string) => void
   isGenerating: boolean
@@ -28,7 +27,6 @@ export default function CaptionList({
   setSelectedCaption,
   selectedVibeOption,
   language,
-  currentTheme,
   onRefresh,
   onCopy,
   isGenerating,
@@ -48,7 +46,7 @@ export default function CaptionList({
         </CardTitle>
         <div className="flex gap-2">
           {selectedVibeOption && (
-            <Badge className={`bg-gradient-to-r ${currentTheme.gradient} text-white border-0`}>
+            <Badge variant="default">
               <selectedVibeOption.icon className="w-3 h-3 mr-1" />
               {language === "km" ? selectedVibeOption.label : selectedVibeOption.labelEn}
             </Badge>
@@ -103,7 +101,7 @@ export default function CaptionList({
             />
             <Button
               onClick={() => onCopy(selectedCaption)}
-              className={`w-full bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
+              className="w-full"
             >
               <Copy className="w-4 h-4 mr-2" />
               {t.copyCaption}

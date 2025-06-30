@@ -15,7 +15,7 @@ export const generalTranslations = {
     multilingualDesc: "គាំទ្រភាសាខ្មែរ និងអង់គ្លេស",
     customizable: "អាចកែប្រែបាន",
     customizableDesc: "កែប្រែតាមរបៀបរបស់អ្នក",
-    colorTheme: "ពណ៌ធីម",
+  
   },
   en: {
     title: "Jomnorng",
@@ -31,6 +31,6 @@ export const generalTranslations = {
     multilingualDesc: "Supports Khmer and English",
     customizable: "Customizable",
     customizableDesc: "Customize to your style",
-    colorTheme: "Color Theme",
+  
   },
 } as const 

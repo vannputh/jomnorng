@@ -4,13 +4,12 @@ import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Loader2, Building2 } from "lucide-react"
-import type { Language, ColorTheme, CompanyProfile } from "@/lib/types"
+import type { Language, CompanyProfile } from "@/lib/types"
 import { getTranslations } from "@/lib/translations"
 import CompanyProfileForm from "./CompanyProfileForm"
 
 interface FirstTimeSetupProps {
   language: Language
-  currentTheme: ColorTheme
   companyProfile: CompanyProfile
   setCompanyProfile: (profile: CompanyProfile) => void
   onSave: () => void
@@ -20,7 +19,6 @@ interface FirstTimeSetupProps {
 
 export default function FirstTimeSetup({
   language,
-  currentTheme,
   companyProfile,
   setCompanyProfile,
   onSave,
@@ -33,10 +31,8 @@ export default function FirstTimeSetup({
     <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
       <Card className="w-full max-w-4xl shadow-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <CardHeader className="text-center space-y-4">
-          <div
-            className={`mx-auto w-16 h-16 bg-gradient-to-r ${currentTheme.gradient} rounded-2xl flex items-center justify-center`}
-          >
-            <Building2 className="w-8 h-8 text-white" />
+          <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center">
+            <Building2 className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-black dark:text-white">
@@ -61,7 +57,6 @@ export default function FirstTimeSetup({
             onSave={onSave}
             isSaving={isSaving}
             language={language}
-            currentTheme={currentTheme}
             isFirstTime={true}
           />
           <div className="flex gap-3 mt-6">
@@ -80,7 +75,7 @@ export default function FirstTimeSetup({
             <Button
               onClick={onSave}
               disabled={isSaving}
-              className={`flex-1 bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90`}
+              className="flex-1"
             >
               {isSaving ? (
                 <>

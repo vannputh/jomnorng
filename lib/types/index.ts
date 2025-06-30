@@ -63,9 +63,3 @@ export interface MarketingGoal {
   labelEn: string
 }
 
-export interface ColorTheme {
-  name: string
-  value: string
-  gradient: string
-  color: string
-} 
