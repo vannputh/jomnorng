@@ -90,21 +90,7 @@ export default function GeneratePage() {
     }
   }, [user, localCompanyProfile.user_id])
 
-  // Handle URL parameters for templates
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search)
-      const vibeParam = urlParams.get('vibe')
-      const promptParam = urlParams.get('prompt')
-      
-      if (vibeParam) {
-        setSelectedVibe(vibeParam)
-      }
-      if (promptParam) {
-        setCustomPrompt(promptParam)
-      }
-    }
-  }, [])
+
 
   // Image and caption handling
   const handleImageReset = () => {

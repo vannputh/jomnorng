@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Plus, Library, Zap, BarChart3, ArrowRight } from "lucide-react"
+import { Loader2, Plus, Library, ArrowRight, Sparkles, TrendingUp } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useCompanyProfile } from "@/hooks/use-company-profile"
 import { useToast } from "@/hooks/use-toast"
@@ -12,17 +12,15 @@ import type { Language, CompanyProfile } from "@/lib/types"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics"
-import CaptionsLibrary from "@/components/dashboard/CaptionsLibrary"
-import QuickTemplates from "@/components/dashboard/QuickTemplates"
 import CompanyProfileForm from "@/components/company/CompanyProfileForm"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
 
 export default function DashboardPage() {
   const [language, setLanguage] = useState<Language>("km")
   const [showProfile, setShowProfile] = useState(false)
-  const [activeTab, setActiveTab] = useState("overview")
+
 
   const router = useRouter()
   const { user, isLoading: authLoading, handleLogout } = useAuth()
@@ -96,8 +94,11 @@ export default function DashboardPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
+          <p className="text-sm text-muted-foreground">Loading your dashboard...</p>
+        </div>
       </div>
     )
   }
@@ -106,9 +107,21 @@ export default function DashboardPage() {
     return null // Will redirect to auth
   }
 
+  const displayName = localCompanyProfile.company_name || user.email?.split('@')[0] || 'Friend'
+  const currentHour = new Date().getHours()
+  let greeting = language === "km" ? "សូមស្វាគមន៍" : "Welcome back"
+  
+  if (currentHour < 12) {
+    greeting = language === "km" ? "អរុណសួស្តី" : "Good morning"
+  } else if (currentHour < 18) {
+    greeting = language === "km" ? "ទិវាសួស្តី" : "Good afternoon" 
+  } else {
+    greeting = language === "km" ? "សាយ័ណ្ណសួស្តី" : "Good evening"
+  }
+
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
-      <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-black dark:to-gray-800">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         <Header
           user={user}
           language={language}
@@ -127,160 +140,98 @@ export default function DashboardPage() {
           />
         </Header>
 
-        {/* Welcome Section */}
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-black dark:text-white">
-            {language === "km" 
-              ? `សូមស្វាគមន៍ ${localCompanyProfile.company_name || user.email?.split('@')[0] || 'មិត្តភ័ក្តិ'}!`
-              : `Welcome back, ${localCompanyProfile.company_name || user.email?.split('@')[0] || 'Friend'}!`
-            }
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            {language === "km" 
-              ? "តើអ្នកចង់បង្កើតចំណងជើងអ្វីថ្ងៃនេះ?" 
-              : "What would you like to create today?"
-            }
-          </p>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card 
-            className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 hover:shadow-xl transition-all cursor-pointer group"
-            onClick={() => router.push('/dashboard/generate')}
-          >
-            <CardContent className="p-6 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <Plus className="w-8 h-8 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white">
-                  {language === "km" ? "បង្កើតចំណងជើង" : "Generate Captions"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {language === "km" 
-                    ? "ផ្ទុករូបភាពហើយបង្កើតចំណងជើង AI" 
-                    : "Upload an image and create AI captions"
-                  }
-                </p>
-              </div>
-              <ArrowRight className="w-5 h-5 mx-auto text-muted-foreground group-hover:text-primary transition-colors" />
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 hover:shadow-xl transition-all cursor-pointer group"
-            onClick={() => setActiveTab('templates')}
-          >
-            <CardContent className="p-6 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto bg-yellow-500/10 rounded-full flex items-center justify-center group-hover:bg-yellow-500/20 transition-colors">
-                <Zap className="w-8 h-8 text-yellow-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white">
-                  {language === "km" ? "គំរូរហ័ស" : "Quick Templates"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {language === "km" 
-                    ? "ប្រើគំរូដែលបានបង្កើតរួចស្រេច" 
-                    : "Use pre-made templates for quick posts"
-                  }
-                </p>
-              </div>
-              <ArrowRight className="w-5 h-5 mx-auto text-muted-foreground group-hover:text-yellow-600 transition-colors" />
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 hover:shadow-xl transition-all cursor-pointer group"
-            onClick={() => setActiveTab('library')}
-          >
-            <CardContent className="p-6 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto bg-blue-500/10 rounded-full flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-                <Library className="w-8 h-8 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white">
-                  {language === "km" ? "បណ្ណាល័យ" : "My Library"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {language === "km" 
-                    ? "មើលចំណងជើងដែលបានបង្កើត" 
-                    : "View your generated captions"
-                  }
-                </p>
-              </div>
-              <ArrowRight className="w-5 h-5 mx-auto text-muted-foreground group-hover:text-blue-600 transition-colors" />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {language === "km" ? "ទិដ្ឋភាព" : "Overview"}
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="templates" className="flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {language === "km" ? "គំរូ" : "Templates"}
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="library" className="flex items-center gap-2">
-              <Library className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {language === "km" ? "បណ្ណាល័យ" : "Library"}
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="generate" className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {language === "km" ? "បង្កើត" : "Generate"}
-              </span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <DashboardAnalytics userId={user.id} language={language} />
-          </TabsContent>
-
-          <TabsContent value="templates" className="space-y-6">
-            <QuickTemplates language={language} />
-          </TabsContent>
-
-          <TabsContent value="library" className="space-y-6">
-            <CaptionsLibrary userId={user.id} language={language} />
-          </TabsContent>
-
-          <TabsContent value="generate" className="space-y-6">
-            <div className="text-center space-y-4">
-              <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <Plus className="w-10 h-10 text-primary" />
-              </div>
-              <h3 className="text-2xl font-bold text-black dark:text-white">
-                {language === "km" ? "បង្កើតចំណងជើងថ្មី" : "Create New Captions"}
-              </h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
+        {/* Enhanced Welcome Section */}
+        <div className="relative overflow-visible">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-3xl"></div>
+          <div className="relative text-center space-y-6 py-14 md:py-16 px-6 overflow-visible">
+            <div className="space-y-4">
+              <h1 className="text-4xl sm:text-5xl font-bold font-sans text-gray-800 dark:text-white leading-[1.4] mb-2 overflow-visible">
+                {greeting}, {displayName}!
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 {language === "km" 
-                  ? "ចូលទៅកាន់ទំព័របង្កើតដើម្បីផ្ទុករូបភាព និងបង្កើតចំណងជើង AI" 
-                  : "Go to the generation page to upload images and create AI-powered captions"
+                  ? "តើអ្នកចង់បង្កើតចំណងជើងអ្វីថ្ងៃនេះ?" 
+                  : "What would you like to create today?"
                 }
               </p>
-              <Button 
-                onClick={() => router.push('/dashboard/generate')}
-                size="lg"
-                className="mt-4"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                {language === "km" ? "ចាប់ផ្តើម" : "Get Started"}
-              </Button>
             </div>
-          </TabsContent>
-        </Tabs>
+            
+
+          </div>
+        </div>
+
+        {/* Enhanced Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card 
+            className="relative border border-gray-200 dark:border-gray-800 shadow-xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900 hover:shadow-2xl transition-all duration-300 cursor-pointer group overflow-hidden"
+            onClick={() => router.push('/dashboard/generate')}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full -translate-y-16 translate-x-16"></div>
+            <CardContent className="p-8 relative">
+              <div className="flex items-start justify-between mb-6">
+                <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+                  <Plus className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <ArrowRight className="w-6 h-6 text-blue-500 group-hover:translate-x-1 transition-transform" />
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                  {language === "km" ? "បង្កើតចំណងជើង" : "Generate Captions"}
+                </h3>
+                <p className="text-blue-700 dark:text-blue-300 leading-relaxed">
+                  {language === "km" 
+                    ? "ផ្ទុករូបភាពហើយបង្កើតចំណងជើង AI ដែលគួរឱ្យទាក់ទាញ" 
+                    : "Upload an image and create engaging AI-powered captions"
+                  }
+                </p>
+                <div className="flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400">
+                  <Sparkles className="w-4 h-4" />
+                  {language === "km" ? "រហ័ស និងកម្លាំង" : "Fast & Powerful"}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="relative border border-gray-200 dark:border-gray-800 shadow-xl bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 hover:shadow-2xl transition-all duration-300 cursor-pointer group overflow-hidden"
+            onClick={() => router.push('/dashboard/library')}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-green-400/20 rounded-full -translate-y-16 translate-x-16"></div>
+            <CardContent className="p-8 relative">
+              <div className="flex items-start justify-between mb-6">
+                <div className="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center group-hover:bg-emerald-500/30 transition-colors">
+                  <Library className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <ArrowRight className="w-6 h-6 text-emerald-500 group-hover:translate-x-1 transition-transform" />
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                  {language === "km" ? "បណ្ណាល័យរបស់ខ្ញុំ" : "My Library"}
+                </h3>
+                <p className="text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                  {language === "km" 
+                    ? "មើលនិងគ្រប់គ្រងចំណងជើងដែលបានបង្កើតរបស់អ្នក" 
+                    : "View and manage your generated caption collection"
+                  }
+                </p>
+                <div className="flex items-center gap-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                  <TrendingUp className="w-4 h-4" />
+                  {language === "km" ? "ស្ថិតិនិងការវិភាគ" : "Stats & Analytics"}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+
+
+        {/* Main Content with enhanced container */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
+          <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+            <DashboardAnalytics userId={user.id} language={language} />
+          </div>
+        </div>
 
         <Footer language={language} />
       </div>

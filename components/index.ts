@@ -26,7 +26,7 @@ export { ThemeProvider } from "./theme-provider"
 // Dashboard components
 export { default as DashboardAnalytics } from "./dashboard/DashboardAnalytics"
 export { default as CaptionsLibrary } from "./dashboard/CaptionsLibrary"
-export { default as QuickTemplates } from "./dashboard/QuickTemplates"
+
 
 // UI Components
 export { Stepper } from "./ui/stepper" 

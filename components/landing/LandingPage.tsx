@@ -65,10 +65,10 @@ export default function LandingPage({
       </header>
 
       {/* Hero Section */}
-      <main className="max-w-6xl mx-auto px-4 py-16">
+      <main className="max-w-6xl mx-auto px-4 py-24 md:py-32">
         <div className="text-center space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-5xl md:text-7xl font-bold text-black dark:text-white">{t.heroTitle}</h1>
+          <div className="space-y-6">
+            <h1 className="text-5xl md:text-7xl font-bold text-black dark:text-white leading-tight">{t.heroTitle}</h1>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">{t.heroSubtitle}</p>
           </div>
 
