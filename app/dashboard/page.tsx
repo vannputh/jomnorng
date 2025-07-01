@@ -145,7 +145,7 @@ export default function DashboardPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-3xl"></div>
           <div className="relative text-center space-y-6 py-14 md:py-16 px-6 overflow-visible">
             <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl font-bold font-sans text-gray-800 dark:text-white leading-[1.4] mb-2 overflow-visible">
+              <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-white leading-[1.4] mb-2 overflow-visible">
                 {greeting}, {displayName}!
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
