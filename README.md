@@ -1,4 +1,4 @@
-# Jomnorng PWA - AI-Powered Social Media Caption Generator
+# Jomnorng PWA - AI-Powered Social Media Caption Generator 
 
 A modern progressive web app for generating AI-powered social media captions in Khmer and English, built with Next.js 15, TypeScript, and Supabase.
 
