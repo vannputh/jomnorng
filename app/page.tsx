@@ -1,16 +1,27 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef, useCallback, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import type React from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Loader2,
   Camera,
@@ -30,32 +41,81 @@ import {
   Palette,
   ArrowRight,
   Globe,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import Image from "next/image"
-import { createClient } from "@/lib/supabase"
-import { useTheme } from "next-themes"
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
+import { createClient } from "@/lib/supabase";
+import { useTheme } from "next-themes";
 
 const COLOR_THEMES = [
-  { name: "Classic", value: "classic", gradient: "from-gray-600 to-gray-800", color: "bg-gray-600" },
-  { name: "Ocean", value: "ocean", gradient: "from-blue-600 to-cyan-600", color: "bg-blue-600" },
-  { name: "Forest", value: "forest", gradient: "from-green-600 to-emerald-600", color: "bg-green-600" },
-  { name: "Sunset", value: "sunset", gradient: "from-orange-600 to-pink-600", color: "bg-orange-600" },
-  { name: "Purple", value: "purple", gradient: "from-purple-600 to-violet-600", color: "bg-purple-600" },
-  { name: "Rose", value: "rose", gradient: "from-pink-600 to-rose-600", color: "bg-pink-600" },
-  { name: "Mint", value: "mint", gradient: "from-teal-600 to-green-600", color: "bg-teal-600" },
-]
+  {
+    name: "Classic",
+    value: "classic",
+    gradient: "from-gray-600 to-gray-800",
+    color: "bg-gray-600",
+  },
+  {
+    name: "Ocean",
+    value: "ocean",
+    gradient: "from-blue-600 to-cyan-600",
+    color: "bg-blue-600",
+  },
+  {
+    name: "Forest",
+    value: "forest",
+    gradient: "from-green-600 to-emerald-600",
+    color: "bg-green-600",
+  },
+  {
+    name: "Sunset",
+    value: "sunset",
+    gradient: "from-orange-600 to-pink-600",
+    color: "bg-orange-600",
+  },
+  {
+    name: "Purple",
+    value: "purple",
+    gradient: "from-purple-600 to-violet-600",
+    color: "bg-purple-600",
+  },
+  {
+    name: "Rose",
+    value: "rose",
+    gradient: "from-pink-600 to-rose-600",
+    color: "bg-pink-600",
+  },
+  {
+    name: "Mint",
+    value: "mint",
+    gradient: "from-teal-600 to-green-600",
+    color: "bg-teal-600",
+  },
+];
 
 const VIBE_OPTIONS = [
   { value: "casual", label: "ធម្មតា", labelEn: "Casual", icon: Coffee },
-  { value: "professional", label: "វិជ្ជាជីវៈ", labelEn: "Professional", icon: Zap },
+  {
+    value: "professional",
+    label: "វិជ្ជាជីវៈ",
+    labelEn: "Professional",
+    icon: Zap,
+  },
   { value: "fun", label: "កំសាន្ត", labelEn: "Fun & Playful", icon: Smile },
-  { value: "inspirational", label: "បំផុសគំនិត", labelEn: "Inspirational", icon: Sparkles },
+  {
+    value: "inspirational",
+    label: "បំផុសគំនិត",
+    labelEn: "Inspirational",
+    icon: Sparkles,
+  },
   { value: "trendy", label: "ទាន់សម័យ", labelEn: "Trendy", icon: Heart },
-]
+];
 
 const BUSINESS_TYPES = [
-  { value: "restaurant", label: "ភោជនីយដ្ឋាន/អាហារ", labelEn: "Restaurant/Food" },
+  {
+    value: "restaurant",
+    label: "ភោជនីយដ្ឋាន/អាហារ",
+    labelEn: "Restaurant/Food",
+  },
   { value: "fashion", label: "ម៉ូដ/សម្លៀកបំពាក់", labelEn: "Fashion/Clothing" },
   { value: "technology", label: "បច្ចេកវិទ្យា", labelEn: "Technology" },
   { value: "healthcare", label: "សុខាភិបាល", labelEn: "Healthcare" },
@@ -66,29 +126,57 @@ const BUSINESS_TYPES = [
   { value: "automotive", label: "យានយន្ត", labelEn: "Automotive" },
   { value: "finance", label: "ហិរញ្ញវត្ថុ", labelEn: "Finance" },
   { value: "other", label: "ផ្សេងៗ", labelEn: "Other" },
-]
+];
 
 const TARGET_AUDIENCES = [
-  { value: "young-adults", label: "យុវជន (១៨-២៥)", labelEn: "Young Adults (18-25)" },
+  {
+    value: "young-adults",
+    label: "យុវជន (១៨-២៥)",
+    labelEn: "Young Adults (18-25)",
+  },
   { value: "adults", label: "មនុស្សពេញវ័យ (២៦-៤០)", labelEn: "Adults (26-40)" },
-  { value: "middle-aged", label: "វ័យកណ្តាល (៤១-៥៥)", labelEn: "Middle-aged (41-55)" },
+  {
+    value: "middle-aged",
+    label: "វ័យកណ្តាល (៤១-៥៥)",
+    labelEn: "Middle-aged (41-55)",
+  },
   { value: "seniors", label: "មនុស្សចាស់ (៥៥+)", labelEn: "Seniors (55+)" },
   { value: "students", label: "និស្សិត", labelEn: "Students" },
   { value: "professionals", label: "អ្នកជំនាញ", labelEn: "Professionals" },
   { value: "parents", label: "ឪពុកម្តាយ", labelEn: "Parents" },
   { value: "entrepreneurs", label: "សហគ្រិន", labelEn: "Entrepreneurs" },
   { value: "general", label: "សាធារណជន", labelEn: "General Public" },
-]
+];
 
 const BRAND_VOICES = [
-  { value: "friendly", label: "មិត្តភាព និងងាយស្រួល", labelEn: "Friendly & Approachable" },
-  { value: "professional", label: "វិជ្ជាជីវៈ និងអាជ្ញាធរ", labelEn: "Professional & Authoritative" },
+  {
+    value: "friendly",
+    label: "មិត្តភាព និងងាយស្រួល",
+    labelEn: "Friendly & Approachable",
+  },
+  {
+    value: "professional",
+    label: "វិជ្ជាជីវៈ និងអាជ្ញាធរ",
+    labelEn: "Professional & Authoritative",
+  },
   { value: "fun", label: "កំសាន្ត និងលេង", labelEn: "Fun & Playful" },
-  { value: "sophisticated", label: "ទំនើប និងឆើតឆាយ", labelEn: "Sophisticated & Elegant" },
+  {
+    value: "sophisticated",
+    label: "ទំនើប និងឆើតឆាយ",
+    labelEn: "Sophisticated & Elegant",
+  },
   { value: "bold", label: "ក្លាហាន និងច្នៃប្រឌិត", labelEn: "Bold & Edgy" },
-  { value: "warm", label: "កក់ក្តៅ និងយកចិត្តទុកដាក់", labelEn: "Warm & Caring" },
-  { value: "innovative", label: "ច្នៃប្រឌិត និងទំនើប", labelEn: "Innovative & Forward-thinking" },
-]
+  {
+    value: "warm",
+    label: "កក់ក្តៅ និងយកចិត្តទុកដាក់",
+    labelEn: "Warm & Caring",
+  },
+  {
+    value: "innovative",
+    label: "ច្នៃប្រឌិត និងទំនើប",
+    labelEn: "Innovative & Forward-thinking",
+  },
+];
 
 const COMPANY_SIZES = [
   { value: "1-10", label: "១-១០ នាក់", labelEn: "1-10 employees" },
@@ -96,60 +184,74 @@ const COMPANY_SIZES = [
   { value: "51-200", label: "៥១-២០០ នាក់", labelEn: "51-200 employees" },
   { value: "201-1000", label: "២០១-១០០០ នាក់", labelEn: "201-1000 employees" },
   { value: "1000+", label: "១០០០+ នាក់", labelEn: "1000+ employees" },
-]
+];
 
 const MARKETING_GOALS = [
-  { value: "brand-awareness", label: "ការស្គាល់ម៉ាក", labelEn: "Brand Awareness" },
-  { value: "lead-generation", label: "បង្កើតអតិថិជនសក្តានុពល", labelEn: "Lead Generation" },
+  {
+    value: "brand-awareness",
+    label: "ការស្គាល់ម៉ាក",
+    labelEn: "Brand Awareness",
+  },
+  {
+    value: "lead-generation",
+    label: "បង្កើតអតិថិជនសក្តានុពល",
+    labelEn: "Lead Generation",
+  },
   { value: "sales", label: "ការលក់", labelEn: "Sales" },
   { value: "engagement", label: "ការចូលរួម", labelEn: "Engagement" },
   { value: "community", label: "បង្កើតសហគមន៍", labelEn: "Community Building" },
   { value: "retention", label: "រក្សាអតិថិជន", labelEn: "Customer Retention" },
-  { value: "product-launch", label: "បើកដំណើរការផលិតផល", labelEn: "Product Launch" },
-]
+  {
+    value: "product-launch",
+    label: "បើកដំណើរការផលិតផល",
+    labelEn: "Product Launch",
+  },
+];
 
 interface UserType {
-  id: string
-  email: string
-  full_name?: string
+  id: string;
+  email: string;
+  full_name?: string;
 }
 
 interface CompanyProfile {
-  id?: string
-  user_id: string
-  company_name: string
-  business_type: string
-  description: string
-  target_audience: string
-  brand_voice: string
-  company_size: string
-  industry_focus: string
-  marketing_goals: string[]
-  brand_colors: string
-  website_url?: string
-  social_handles?: string
-  unique_selling_points: string
-  created_at?: string
+  id?: string;
+  user_id: string;
+  company_name: string;
+  business_type: string;
+  description: string;
+  target_audience: string;
+  brand_voice: string;
+  company_size: string;
+  industry_focus: string;
+  marketing_goals: string[];
+  brand_colors: string;
+  website_url?: string;
+  social_handles?: string;
+  unique_selling_points: string;
+  created_at?: string;
 }
 
 export default function Component() {
-  const [currentView, setCurrentView] = useState<"landing" | "auth" | "app">("landing")
-  const [language, setLanguage] = useState<"km" | "en">("km")
-  const [colorTheme, setColorTheme] = useState("classic")
-  const [user, setUser] = useState<UserType | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [fullName, setFullName] = useState("")
-  const [image, setImage] = useState<string | null>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [captions, setCaptions] = useState<string[]>([])
-  const [selectedVibe, setSelectedVibe] = useState("casual")
-  const [customPrompt, setCustomPrompt] = useState("")
-  const [selectedCaption, setSelectedCaption] = useState("")
-  const [showProfile, setShowProfile] = useState(false)
+  const [currentView, setCurrentView] = useState<"landing" | "auth" | "app">(
+    "landing"
+  );
+  const [language, setLanguage] = useState<"km" | "en">("km");
+  const [colorTheme, setColorTheme] = useState("classic");
+  const [user, setUser] = useState<UserType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [image, setImage] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [captions, setCaptions] = useState<string[]>([]);
+  const [selectedVibe, setSelectedVibe] = useState("casual");
+  const [customPrompt, setCustomPrompt] = useState("");
+  const [selectedCaption, setSelectedCaption] = useState("");
+  const [showProfile, setShowProfile] = useState(false);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile>({
     user_id: "",
     company_name: "",
@@ -164,16 +266,17 @@ export default function Component() {
     website_url: "",
     social_handles: "",
     unique_selling_points: "",
-  })
-  const [isSavingProfile, setIsSavingProfile] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const { toast } = useToast()
-  const { theme, setTheme } = useTheme()
-  const supabase = createClient()
-  const [showFirstTimeSetup, setShowFirstTimeSetup] = useState(false)
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false)
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
+  const supabase = createClient();
+  const [showFirstTimeSetup, setShowFirstTimeSetup] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
-  const currentTheme = COLOR_THEMES.find((t) => t.value === colorTheme) || COLOR_THEMES[0]
+  const currentTheme =
+    COLOR_THEMES.find((t) => t.value === colorTheme) || COLOR_THEMES[0];
 
   const t = {
     km: {
@@ -181,7 +284,8 @@ export default function Component() {
       titleEn: "(Jomnorng)",
       subtitle: "កម្មវិធីបង្កើតចំណងជើងសម្រាប់បណ្តាញសង្គមដោយ AI",
       heroTitle: "បង្កើតចំណងជើងដ៏ទាក់ទាញ",
-      heroSubtitle: "ប្រើប្រាស់ AI ដើម្បីបង្កើតចំណងជើងសម្រាប់បណ្តាញសង្គមដោយស្វ័យប្រវត្តិ",
+      heroSubtitle:
+        "ប្រើប្រាស់ AI ដើម្បីបង្កើតចំណងជើងសម្រាប់បណ្តាញសង្គមដោយស្វ័យប្រវត្តិ",
       getStarted: "ចាប់ផ្តើម",
       features: "លក្ខណៈពិសេស",
       aiPowered: "ដំណើរការដោយ AI",
@@ -251,7 +355,8 @@ export default function Component() {
       logout: "Logout",
       profile: "Profile",
       uploadImage: "Upload Image",
-      uploadDesc: "Take a photo, upload from gallery, or paste an image (Ctrl+V)",
+      uploadDesc:
+        "Take a photo, upload from gallery, or paste an image (Ctrl+V)",
       chooseFile: "Choose File",
       camera: "Camera",
       uploadDifferent: "Upload Different Image",
@@ -280,25 +385,25 @@ export default function Component() {
       industryFocus: "Industry Focus",
       marketingGoals: "Marketing Goals",
     },
-  }
+  };
 
   // Clear any stale auth data
   const clearAuthData = async () => {
     try {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut();
       // Clear any local storage items related to auth
       if (typeof window !== "undefined") {
-        localStorage.removeItem("supabase.auth.token")
-        sessionStorage.clear()
+        localStorage.removeItem("supabase.auth.token");
+        sessionStorage.clear();
       }
     } catch (error) {
-      console.log("Error clearing auth data:", error)
+      console.log("Error clearing auth data:", error);
     }
-  }
+  };
 
   // Authentication functions
   const handleAuth = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       if (authMode === "signup") {
         const { data, error } = await supabase.auth.signUp({
@@ -310,37 +415,37 @@ export default function Component() {
             },
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
-        })
-        if (error) throw error
+        });
+        if (error) throw error;
         toast({
           title: "Success!",
           description: "Please check your email to verify your account.",
-        })
+        });
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
-        })
-        if (error) throw error
-        setCurrentView("app")
+        });
+        if (error) throw error;
+        setCurrentView("app");
       }
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleLogout = async () => {
-    await clearAuthData()
-    setUser(null)
-    setCurrentView("landing")
-    setShowFirstTimeSetup(false)
-    setIsFirstTimeUser(false)
+    await clearAuthData();
+    setUser(null);
+    setCurrentView("landing");
+    setShowFirstTimeSetup(false);
+    setIsFirstTimeUser(false);
     setCompanyProfile({
       user_id: "",
       company_name: "",
@@ -355,8 +460,8 @@ export default function Component() {
       website_url: "",
       social_handles: "",
       unique_selling_points: "",
-    })
-  }
+    });
+  };
 
   // Load user and profile
   useEffect(() => {
@@ -364,28 +469,28 @@ export default function Component() {
       try {
         const {
           data: { user },
-        } = await supabase.auth.getUser()
+        } = await supabase.auth.getUser();
 
         if (user) {
           setUser({
             id: user.id,
             email: user.email!,
             full_name: user.user_metadata?.full_name,
-          })
-          setCurrentView("app")
-          await loadCompanyProfile(user.id)
+          });
+          setCurrentView("app");
+          await loadCompanyProfile(user.id);
         } else {
-          setCurrentView("landing")
+          setCurrentView("landing");
         }
       } catch (error) {
-        console.log("Error getting user:", error)
-        await clearAuthData()
-        setCurrentView("landing")
+        console.log("Error getting user:", error);
+        await clearAuthData();
+        setCurrentView("landing");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-    getUser()
+    };
+    getUser();
 
     const {
       data: { subscription },
@@ -395,59 +500,69 @@ export default function Component() {
           id: session.user.id,
           email: session.user.email!,
           full_name: session.user.user_metadata?.full_name,
-        })
-        setCurrentView("app")
-        await loadCompanyProfile(session.user.id)
+        });
+        setCurrentView("app");
+        await loadCompanyProfile(session.user.id);
       } else {
-        setUser(null)
-        setCurrentView("landing")
-        setShowFirstTimeSetup(false)
-        setIsFirstTimeUser(false)
+        setUser(null);
+        setCurrentView("landing");
+        setShowFirstTimeSetup(false);
+        setIsFirstTimeUser(false);
       }
-    })
+    });
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, []);
 
   const loadCompanyProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase.from("company_profiles").select("*").eq("user_id", userId).single()
+      const { data, error } = await supabase
+        .from("company_profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
 
       if (error) {
         // Handle specific error cases
-        if (error.code === "PGRST116" || error.message.includes("No rows found")) {
+        if (
+          error.code === "PGRST116" ||
+          error.message.includes("No rows found")
+        ) {
           // No profile found - first time user
-          console.log("No profile found - first time user")
-          setIsFirstTimeUser(true)
-          setShowFirstTimeSetup(true)
-          return
-        } else if (error.code === "406" || error.message.includes("Not Acceptable")) {
+          console.log("No profile found - first time user");
+          setIsFirstTimeUser(true);
+          setShowFirstTimeSetup(true);
+          return;
+        } else if (
+          error.code === "406" ||
+          error.message.includes("Not Acceptable")
+        ) {
           // User might be deleted from database but still has auth token
-          console.log("User not found in database, clearing auth")
-          await clearAuthData()
-          setCurrentView("landing")
-          return
+          console.log("User not found in database, clearing auth");
+          await clearAuthData();
+          setCurrentView("landing");
+          return;
         }
-        throw error
+        throw error;
       }
 
       if (data) {
-        setCompanyProfile(data)
-        setIsFirstTimeUser(false)
-        setShowFirstTimeSetup(false)
+        setCompanyProfile(data as unknown as CompanyProfile);
+        setIsFirstTimeUser(false);
+        setShowFirstTimeSetup(false);
       }
     } catch (error: any) {
-      console.log("Error loading profile:", error)
+      console.log("Error loading profile:", error);
       // If there's any error, treat as first time user
-      setIsFirstTimeUser(true)
-      setShowFirstTimeSetup(true)
+      setIsFirstTimeUser(true);
+      setShowFirstTimeSetup(true);
     }
-  }
+  };
 
   const skipFirstTimeSetup = async () => {
-    if (!user) return
+    if (!user) return;
 
-    setIsSavingProfile(true)
+    setIsSavingProfile(true);
     try {
       // Create a minimal empty profile to mark that setup was attempted
       const emptyProfile = {
@@ -464,119 +579,131 @@ export default function Component() {
         website_url: "",
         social_handles: "",
         unique_selling_points: "",
-      }
+      };
 
-      const { data, error } = await supabase.from("company_profiles").upsert([emptyProfile]).select()
+      const { data, error } = await supabase
+        .from("company_profiles")
+        .upsert([emptyProfile])
+        .select();
 
       if (error) {
-        console.log("Error saving empty profile:", error)
+        console.log("Error saving empty profile:", error);
         // Even if save fails, still close the popup
       } else if (data && data[0]) {
-        setCompanyProfile(data[0])
+        setCompanyProfile(data[0] as CompanyProfile);
       }
 
       // Always close the popup regardless of save success
-      setShowFirstTimeSetup(false)
-      setIsFirstTimeUser(false)
+      setShowFirstTimeSetup(false);
+      setIsFirstTimeUser(false);
 
       toast({
         title: language === "km" ? "រំលងបានជោគជ័យ!" : "Skipped successfully!",
-        description: language === "km" ? "អ្នកអាចកំណត់ព័ត៌មានក្រុមហ៊ុននៅពេលក្រោយ" : "You can set up your company profile later.",
-      })
+        description:
+          language === "km"
+            ? "អ្នកអាចកំណត់ព័ត៌មានក្រុមហ៊ុននៅពេលក្រោយ"
+            : "You can set up your company profile later.",
+      });
     } catch (error) {
-      console.log("Error in skip setup:", error)
+      console.log("Error in skip setup:", error);
       // Still close popup even on error
-      setShowFirstTimeSetup(false)
-      setIsFirstTimeUser(false)
+      setShowFirstTimeSetup(false);
+      setIsFirstTimeUser(false);
     } finally {
-      setIsSavingProfile(false)
+      setIsSavingProfile(false);
     }
-  }
+  };
 
   const saveCompanyProfile = async (isFirstTime = false) => {
-    if (!user) return
+    if (!user) return;
 
-    setIsSavingProfile(true)
+    setIsSavingProfile(true);
     try {
-      const profileData = { ...companyProfile, user_id: user.id }
-      const { data, error } = await supabase.from("company_profiles").upsert([profileData]).select()
+      const profileData = { ...companyProfile, user_id: user.id };
+      const { data, error } = await supabase
+        .from("company_profiles")
+        .upsert([profileData])
+        .select();
 
-      if (error) throw error
+      if (error) throw error;
 
       if (data && data[0]) {
-        setCompanyProfile(data[0])
+        setCompanyProfile(data[0] as CompanyProfile);
       }
 
       if (isFirstTime) {
-        setShowFirstTimeSetup(false)
-        setIsFirstTimeUser(false)
+        setShowFirstTimeSetup(false);
+        setIsFirstTimeUser(false);
       }
 
       toast({
         title: language === "km" ? "បានរក្សាទុក!" : "Saved!",
-        description: language === "km" ? "ព័ត៌មានក្រុមហ៊ុនបានរក្សាទុក" : "Company profile saved successfully.",
-      })
+        description:
+          language === "km"
+            ? "ព័ត៌មានក្រុមហ៊ុនបានរក្សាទុក"
+            : "Company profile saved successfully.",
+      });
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to save profile.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSavingProfile(false)
+      setIsSavingProfile(false);
     }
-  }
+  };
 
   const handleImageUpload = useCallback(
     (file: File) => {
       if (file && file.type.startsWith("image/")) {
-        const reader = new FileReader()
+        const reader = new FileReader();
         reader.onload = (e) => {
-          setImage(e.target?.result as string)
-          setCaptions([])
-          setSelectedCaption("")
-        }
-        reader.readAsDataURL(file)
+          setImage(e.target?.result as string);
+          setCaptions([]);
+          setSelectedCaption("");
+        };
+        reader.readAsDataURL(file);
       } else {
         toast({
           title: "Invalid file",
           description: "Please upload a valid image file.",
           variant: "destructive",
-        })
+        });
       }
     },
-    [toast],
-  )
+    [toast]
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target?.files?.[0]
+    const file = e.target?.files?.[0];
     if (file) {
-      handleImageUpload(file)
+      handleImageUpload(file);
     }
-  }
+  };
 
   const handlePaste = useCallback(
     (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items
+      const items = e.clipboardData?.items;
       if (items) {
         for (let i = 0; i < items.length; i++) {
           if (items[i].type.startsWith("image/")) {
-            const file = items[i].getAsFile()
+            const file = items[i].getAsFile();
             if (file) {
-              handleImageUpload(file)
+              handleImageUpload(file);
             }
-            break
+            break;
           }
         }
       }
     },
-    [handleImageUpload],
-  )
+    [handleImageUpload]
+  );
 
   const analyzeImage = async () => {
-    if (!image || !user) return
+    if (!image || !user) return;
 
-    setIsAnalyzing(true)
+    setIsAnalyzing(true);
     try {
       const response = await fetch("/api/analyze-image", {
         method: "POST",
@@ -590,52 +717,59 @@ export default function Component() {
           companyProfile,
           language,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to analyze image")
+        throw new Error("Failed to analyze image");
       }
 
-      const data = await response.json()
-      setCaptions(data.captions)
-      setSelectedCaption(data.captions[0] || "")
+      const data = await response.json();
+      setCaptions(data.captions);
+      setSelectedCaption(data.captions[0] || "");
 
       toast({
         title: language === "km" ? "ការវិភាគបានបញ្ចប់!" : "Analysis complete!",
-        description: language === "km" ? "បានបង្កើតចំណងជើង" : "Generated captions based on your image.",
-      })
+        description:
+          language === "km"
+            ? "បានបង្កើតចំណងជើង"
+            : "Generated captions based on your image.",
+      });
     } catch (error) {
       toast({
         title: language === "km" ? "ការវិភាគបរាជ័យ" : "Analysis failed",
-        description: language === "km" ? "សូមព្យាយាមម្តងទៀត" : "Failed to analyze the image. Please try again.",
+        description:
+          language === "km"
+            ? "សូមព្យាយាមម្តងទៀត"
+            : "Failed to analyze the image. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsAnalyzing(false)
+      setIsAnalyzing(false);
     }
-  }
+  };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(text);
     toast({
       title: language === "km" ? "បានចម្លង!" : "Copied!",
-      description: language === "km" ? "ចំណងជើងបានចម្លង" : "Caption copied to clipboard.",
-    })
-  }
+      description:
+        language === "km" ? "ចំណងជើងបានចម្លង" : "Caption copied to clipboard.",
+    });
+  };
 
   useEffect(() => {
-    document.addEventListener("paste", handlePaste)
-    return () => document.removeEventListener("paste", handlePaste)
-  }, [handlePaste])
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [handlePaste]);
 
-  const selectedVibeOption = VIBE_OPTIONS.find((v) => v.value === selectedVibe)
+  const selectedVibeOption = VIBE_OPTIONS.find((v) => v.value === selectedVibe);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
         <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
       </div>
-    )
+    );
   }
 
   // Landing Page
@@ -656,7 +790,10 @@ export default function Component() {
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <Select value={language} onValueChange={(value: "km" | "en") => setLanguage(value)}>
+              <Select
+                value={language}
+                onValueChange={(value: "km" | "en") => setLanguage(value)}
+              >
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -674,7 +811,9 @@ export default function Component() {
                   {COLOR_THEMES.map((theme) => (
                     <SelectItem key={theme.value} value={theme.value}>
                       <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${theme.color}`} />
+                        <div
+                          className={`w-3 h-3 rounded-full ${theme.color}`}
+                        />
                         {theme.name}
                       </div>
                     </SelectItem>
@@ -682,8 +821,16 @@ export default function Component() {
                 </SelectContent>
               </Select>
 
-              <Button variant="outline" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              >
+                {theme === "dark" ? (
+                  <Sun className="w-4 h-4" />
+                ) : (
+                  <Moon className="w-4 h-4" />
+                )}
               </Button>
             </div>
           </div>
@@ -693,8 +840,12 @@ export default function Component() {
         <main className="max-w-6xl mx-auto px-4 py-16">
           <div className="text-center space-y-8">
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-7xl font-bold text-black dark:text-white">{t[language].heroTitle}</h1>
-              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">{t[language].heroSubtitle}</p>
+              <h1 className="text-5xl md:text-7xl font-bold text-black dark:text-white">
+                {t[language].heroTitle}
+              </h1>
+              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                {t[language].heroSubtitle}
+              </p>
             </div>
 
             <div className="flex gap-4 justify-center">
@@ -716,8 +867,12 @@ export default function Component() {
                   >
                     <Sparkles className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-black dark:text-white">{t[language].aiPowered}</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{t[language].aiDesc}</p>
+                  <h3 className="text-xl font-bold text-black dark:text-white">
+                    {t[language].aiPowered}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {t[language].aiDesc}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -728,8 +883,12 @@ export default function Component() {
                   >
                     <Globe className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-black dark:text-white">{t[language].multilingual}</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{t[language].multilingualDesc}</p>
+                  <h3 className="text-xl font-bold text-black dark:text-white">
+                    {t[language].multilingual}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {t[language].multilingualDesc}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -740,15 +899,19 @@ export default function Component() {
                   >
                     <Palette className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-black dark:text-white">{t[language].customizable}</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{t[language].customizableDesc}</p>
+                  <h3 className="text-xl font-bold text-black dark:text-white">
+                    {t[language].customizable}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {t[language].customizableDesc}
+                  </p>
                 </CardContent>
               </Card>
             </div>
           </div>
         </main>
       </div>
-    )
+    );
   }
 
   // Auth Page
@@ -757,7 +920,11 @@ export default function Component() {
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
           <CardHeader className="text-center space-y-4">
-            <Button variant="ghost" onClick={() => setCurrentView("landing")} className="absolute top-4 left-4 p-2">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentView("landing")}
+              className="absolute top-4 left-4 p-2"
+            >
               ← Back
             </Button>
             <div
@@ -769,11 +936,18 @@ export default function Component() {
               <h1 className="text-3xl font-bold text-black dark:text-white">
                 {language === "km" ? "ចំណង (Jomnorng)" : "Jomnorng (ចំណង)"}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">{t[language].subtitle}</p>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">
+                {t[language].subtitle}
+              </p>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Tabs value={authMode} onValueChange={(value) => setAuthMode(value as "login" | "signup")}>
+            <Tabs
+              value={authMode}
+              onValueChange={(value) =>
+                setAuthMode(value as "login" | "signup")
+              }
+            >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">{t[language].login}</TabsTrigger>
                 <TabsTrigger value="signup">{t[language].signup}</TabsTrigger>
@@ -841,7 +1015,7 @@ export default function Component() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // First-time setup dialog
@@ -857,7 +1031,9 @@ export default function Component() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-black dark:text-white">
-                {language === "km" ? "សូមស្វាគមន៍មកកាន់ ចំណង!" : "Welcome to Jomnorng!"}
+                {language === "km"
+                  ? "សូមស្វាគមន៍មកកាន់ ចំណង!"
+                  : "Welcome to Jomnorng!"}
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-2">
                 {language === "km"
@@ -883,7 +1059,12 @@ export default function Component() {
               isFirstTime={true}
             />
             <div className="flex gap-3 mt-6">
-              <Button variant="outline" onClick={skipFirstTimeSetup} className="flex-1" disabled={isSavingProfile}>
+              <Button
+                variant="outline"
+                onClick={skipFirstTimeSetup}
+                className="flex-1"
+                disabled={isSavingProfile}
+              >
                 {isSavingProfile ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -916,7 +1097,7 @@ export default function Component() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // Main App
@@ -942,7 +1123,10 @@ export default function Component() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Select value={language} onValueChange={(value: "km" | "en") => setLanguage(value)}>
+            <Select
+              value={language}
+              onValueChange={(value: "km" | "en") => setLanguage(value)}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -968,11 +1152,23 @@ export default function Component() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
             </Button>
 
-            <Button variant="outline" size="icon" onClick={() => setShowProfile(true)}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowProfile(true)}
+            >
               <User className="w-4 h-4" />
             </Button>
 
@@ -1024,9 +1220,13 @@ export default function Component() {
                     </div>
                     <div>
                       <p className="text-lg font-medium text-black dark:text-white">
-                        {language === "km" ? "ផ្ទុករូបភាពដើម្បីចាប់ផ្តើម" : "Upload an image to get started"}
+                        {language === "km"
+                          ? "ផ្ទុករូបភាពដើម្បីចាប់ផ្តើម"
+                          : "Upload an image to get started"}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{t[language].uploadDesc}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {t[language].uploadDesc}
+                      </p>
                     </div>
                     <div className="flex gap-3 justify-center">
                       <Button
@@ -1036,7 +1236,10 @@ export default function Component() {
                         <Upload className="w-4 h-4 mr-2" />
                         {t[language].chooseFile}
                       </Button>
-                      <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                      <Button
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
                         <Camera className="w-4 h-4 mr-2" />
                         {t[language].camera}
                       </Button>
@@ -1045,9 +1248,10 @@ export default function Component() {
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
-                      capture="environment"
                       onChange={handleFileChange}
                       className="hidden"
+                      title={t[language].chooseFile}
+                      placeholder={t[language].chooseFile}
                     />
                   </div>
                 ) : (
@@ -1064,9 +1268,9 @@ export default function Component() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setImage(null)
-                        setCaptions([])
-                        setSelectedCaption("")
+                        setImage(null);
+                        setCaptions([]);
+                        setSelectedCaption("");
                       }}
                     >
                       {t[language].uploadDifferent}
@@ -1088,11 +1292,13 @@ export default function Component() {
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                     {VIBE_OPTIONS.map((vibe) => {
-                      const Icon = vibe.icon
+                      const Icon = vibe.icon;
                       return (
                         <Button
                           key={vibe.value}
-                          variant={selectedVibe === vibe.value ? "default" : "outline"}
+                          variant={
+                            selectedVibe === vibe.value ? "default" : "outline"
+                          }
                           className={`h-auto p-4 flex flex-col gap-2 transition-all ${
                             selectedVibe === vibe.value
                               ? `bg-gradient-to-r ${currentTheme.gradient} text-white shadow-lg`
@@ -1101,14 +1307,18 @@ export default function Component() {
                           onClick={() => setSelectedVibe(vibe.value)}
                         >
                           <Icon className="w-6 h-6" />
-                          <span className="text-xs font-medium">{language === "km" ? vibe.label : vibe.labelEn}</span>
+                          <span className="text-xs font-medium">
+                            {language === "km" ? vibe.label : vibe.labelEn}
+                          </span>
                         </Button>
-                      )
+                      );
                     })}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="custom-prompt">{t[language].customInstructions}</Label>
+                    <Label htmlFor="custom-prompt">
+                      {t[language].customInstructions}
+                    </Label>
                     <Textarea
                       id="custom-prompt"
                       placeholder={
@@ -1157,13 +1367,26 @@ export default function Component() {
                   </CardTitle>
                   <div className="flex gap-2">
                     {selectedVibeOption && (
-                      <Badge className={`bg-gradient-to-r ${currentTheme.gradient} text-white border-0`}>
+                      <Badge
+                        className={`bg-gradient-to-r ${currentTheme.gradient} text-white border-0`}
+                      >
                         <selectedVibeOption.icon className="w-3 h-3 mr-1" />
-                        {language === "km" ? selectedVibeOption.label : selectedVibeOption.labelEn}
+                        {language === "km"
+                          ? selectedVibeOption.label
+                          : selectedVibeOption.labelEn}
                       </Badge>
                     )}
-                    <Button variant="outline" size="sm" onClick={() => analyzeImage()} disabled={isGenerating}>
-                      {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => analyzeImage()}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
                 </CardHeader>
@@ -1188,8 +1411,8 @@ export default function Component() {
                               variant="ghost"
                               size="sm"
                               onClick={(e) => {
-                                e.stopPropagation()
-                                copyToClipboard(caption)
+                                e.stopPropagation();
+                                copyToClipboard(caption);
                               }}
                             >
                               <Copy className="w-4 h-4" />
@@ -1202,7 +1425,9 @@ export default function Component() {
 
                   {selectedCaption && (
                     <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <Label htmlFor="selected-caption">{t[language].editCaption}</Label>
+                      <Label htmlFor="selected-caption">
+                        {t[language].editCaption}
+                      </Label>
                       <Textarea
                         id="selected-caption"
                         value={selectedCaption}
@@ -1226,7 +1451,7 @@ export default function Component() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Company Profile Form Component
@@ -1240,19 +1465,21 @@ function CompanyProfileForm({
   currentTheme,
   isFirstTime = false,
 }: {
-  profile: CompanyProfile
-  setProfile: (profile: CompanyProfile) => void
-  onSave: () => void
-  isSaving: boolean
-  language: "km" | "en"
-  t: any
-  currentTheme: any
-  isFirstTime?: boolean
+  profile: CompanyProfile;
+  setProfile: (profile: CompanyProfile) => void;
+  onSave: () => void;
+  isSaving: boolean;
+  language: "km" | "en";
+  t: any;
+  currentTheme: any;
+  isFirstTime?: boolean;
 }) {
   const handleMarketingGoalsChange = (goal: string, checked: boolean) => {
-    const goals = checked ? [...profile.marketing_goals, goal] : profile.marketing_goals.filter((g) => g !== goal)
-    setProfile({ ...profile, marketing_goals: goals })
-  }
+    const goals = checked
+      ? [...profile.marketing_goals, goal]
+      : profile.marketing_goals.filter((g) => g !== goal);
+    setProfile({ ...profile, marketing_goals: goals });
+  };
 
   return (
     <div className="space-y-6">
@@ -1270,8 +1497,14 @@ function CompanyProfileForm({
               <Input
                 id="company-name"
                 value={profile.company_name}
-                onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
-                placeholder={language === "km" ? "ឈ្មោះក្រុមហ៊ុនរបស់អ្នក" : "Your company name"}
+                onChange={(e) =>
+                  setProfile({ ...profile, company_name: e.target.value })
+                }
+                placeholder={
+                  language === "km"
+                    ? "ឈ្មោះក្រុមហ៊ុនរបស់អ្នក"
+                    : "Your company name"
+                }
                 className="bg-gray-50 dark:bg-gray-800"
               />
             </div>
@@ -1279,10 +1512,18 @@ function CompanyProfileForm({
               <Label htmlFor="business-type">{t[language].businessType}</Label>
               <Select
                 value={profile.business_type}
-                onValueChange={(value) => setProfile({ ...profile, business_type: value })}
+                onValueChange={(value) =>
+                  setProfile({ ...profile, business_type: value })
+                }
               >
                 <SelectTrigger className="bg-gray-50 dark:bg-gray-800">
-                  <SelectValue placeholder={language === "km" ? "ជ្រើសរើសប្រភេទអាជីវកម្ម" : "Select business type"} />
+                  <SelectValue
+                    placeholder={
+                      language === "km"
+                        ? "ជ្រើសរើសប្រភេទអាជីវកម្ម"
+                        : "Select business type"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {BUSINESS_TYPES.map((type) => (
@@ -1296,15 +1537,19 @@ function CompanyProfileForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">{t[language].companyDescription}</Label>
+            <Label htmlFor="description">
+              {t[language].companyDescription}
+            </Label>
             <Textarea
               id="description"
               value={profile.description}
-              onChange={(e) => setProfile({ ...profile, description: e.target.value })}
+              onChange={(e) =>
+                setProfile({ ...profile, description: e.target.value })
+              }
               rows={4}
               placeholder={
                 language === "km"
-                  ? "ពិពណ៌នាអំពីអ្វីដែលក្រុមហ៊ុនរបស់អ្នកធ្វើ បេសកកម្ម និងអ្វីដែលធ្វើឱ្យអ្នកពិសេស..."
+                  ? "ពិពណ៌នាអំពីអ្វីដែលក្រុមហ៊ុនរបស់អ្នកធ្វើ បេសកម្ម និងអ្វីដែលធ្វើឱ្យអ្នកពិសេស..."
                   : "Describe what your company does, your mission, and what makes you unique..."
               }
               className="bg-gray-50 dark:bg-gray-800"
@@ -1316,10 +1561,18 @@ function CompanyProfileForm({
               <Label htmlFor="company-size">{t[language].companySize}</Label>
               <Select
                 value={profile.company_size}
-                onValueChange={(value) => setProfile({ ...profile, company_size: value })}
+                onValueChange={(value) =>
+                  setProfile({ ...profile, company_size: value })
+                }
               >
                 <SelectTrigger className="bg-gray-50 dark:bg-gray-800">
-                  <SelectValue placeholder={language === "km" ? "ជ្រើសរើសទំហំក្រុមហ៊ុន" : "Select company size"} />
+                  <SelectValue
+                    placeholder={
+                      language === "km"
+                        ? "ជ្រើសរើសទំហំក្រុមហ៊ុន"
+                        : "Select company size"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {COMPANY_SIZES.map((size) => (
@@ -1335,7 +1588,9 @@ function CompanyProfileForm({
               <Input
                 id="website-url"
                 value={profile.website_url}
-                onChange={(e) => setProfile({ ...profile, website_url: e.target.value })}
+                onChange={(e) =>
+                  setProfile({ ...profile, website_url: e.target.value })
+                }
                 placeholder="https://yourwebsite.com"
                 className="bg-gray-50 dark:bg-gray-800"
               />
@@ -1346,13 +1601,23 @@ function CompanyProfileForm({
         <TabsContent value="brand" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="target-audience">{t[language].targetAudience}</Label>
+              <Label htmlFor="target-audience">
+                {t[language].targetAudience}
+              </Label>
               <Select
                 value={profile.target_audience}
-                onValueChange={(value) => setProfile({ ...profile, target_audience: value })}
+                onValueChange={(value) =>
+                  setProfile({ ...profile, target_audience: value })
+                }
               >
                 <SelectTrigger className="bg-gray-50 dark:bg-gray-800">
-                  <SelectValue placeholder={language === "km" ? "ជ្រើសរើសទស្សនិកជនគោលដៅ" : "Select target audience"} />
+                  <SelectValue
+                    placeholder={
+                      language === "km"
+                        ? "ជ្រើសរើសទស្សនិកជនគោលដៅ"
+                        : "Select target audience"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {TARGET_AUDIENCES.map((audience) => (
@@ -1367,10 +1632,18 @@ function CompanyProfileForm({
               <Label htmlFor="brand-voice">{t[language].brandVoiceLabel}</Label>
               <Select
                 value={profile.brand_voice}
-                onValueChange={(value) => setProfile({ ...profile, brand_voice: value })}
+                onValueChange={(value) =>
+                  setProfile({ ...profile, brand_voice: value })
+                }
               >
                 <SelectTrigger className="bg-gray-50 dark:bg-gray-800">
-                  <SelectValue placeholder={language === "km" ? "ជ្រើសរើសសំឡេងម៉ាក" : "Select brand voice"} />
+                  <SelectValue
+                    placeholder={
+                      language === "km"
+                        ? "ជ្រើសរើសសំឡេងម៉ាក"
+                        : "Select brand voice"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {BRAND_VOICES.map((voice) => (
@@ -1389,17 +1662,25 @@ function CompanyProfileForm({
               <Input
                 id="brand-colors"
                 value={profile.brand_colors}
-                onChange={(e) => setProfile({ ...profile, brand_colors: e.target.value })}
-                placeholder={language === "km" ? "ឧ. ខៀវ ទង ស" : "e.g., Blue, Gold, White"}
+                onChange={(e) =>
+                  setProfile({ ...profile, brand_colors: e.target.value })
+                }
+                placeholder={
+                  language === "km" ? "ឧ. ខៀវ ទង ស" : "e.g., Blue, Gold, White"
+                }
                 className="bg-gray-50 dark:bg-gray-800"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="social-handles">{t[language].socialHandles}</Label>
+              <Label htmlFor="social-handles">
+                {t[language].socialHandles}
+              </Label>
               <Input
                 id="social-handles"
                 value={profile.social_handles}
-                onChange={(e) => setProfile({ ...profile, social_handles: e.target.value })}
+                onChange={(e) =>
+                  setProfile({ ...profile, social_handles: e.target.value })
+                }
                 placeholder="@yourhandle, @company_fb"
                 className="bg-gray-50 dark:bg-gray-800"
               />
@@ -1407,11 +1688,18 @@ function CompanyProfileForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="unique-selling-points">{t[language].uniqueSellingPoints}</Label>
+            <Label htmlFor="unique-selling-points">
+              {t[language].uniqueSellingPoints}
+            </Label>
             <Textarea
               id="unique-selling-points"
               value={profile.unique_selling_points}
-              onChange={(e) => setProfile({ ...profile, unique_selling_points: e.target.value })}
+              onChange={(e) =>
+                setProfile({
+                  ...profile,
+                  unique_selling_points: e.target.value,
+                })
+              }
               rows={3}
               placeholder={
                 language === "km"
@@ -1429,7 +1717,9 @@ function CompanyProfileForm({
             <Textarea
               id="industry-focus"
               value={profile.industry_focus}
-              onChange={(e) => setProfile({ ...profile, industry_focus: e.target.value })}
+              onChange={(e) =>
+                setProfile({ ...profile, industry_focus: e.target.value })
+              }
               rows={3}
               placeholder={
                 language === "km"
@@ -1449,8 +1739,12 @@ function CompanyProfileForm({
                     type="checkbox"
                     id={goal.value}
                     checked={profile.marketing_goals.includes(goal.value)}
-                    onChange={(e) => handleMarketingGoalsChange(goal.value, e.target.checked)}
+                    onChange={(e) =>
+                      handleMarketingGoalsChange(goal.value, e.target.checked)
+                    }
                     className="rounded border-gray-300"
+                    title={language === "km" ? goal.label : goal.labelEn}
+                    placeholder={language === "km" ? goal.label : goal.labelEn}
                   />
                   <Label htmlFor={goal.value} className="text-sm">
                     {language === "km" ? goal.label : goal.labelEn}
@@ -1482,5 +1776,5 @@ function CompanyProfileForm({
         </Button>
       )}
     </div>
-  )
+  );
 }
