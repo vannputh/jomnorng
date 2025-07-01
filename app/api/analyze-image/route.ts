@@ -1,10 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { generateText } from "ai"
-import { google } from "@ai-sdk/google"
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
 
-const gemini = google("gemini-1.5-flash", {
+const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 })
+
+const gemini = google("gemini-1.5-flash")
 
 export async function POST(request: NextRequest) {
   if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
@@ -20,6 +22,9 @@ export async function POST(request: NextRequest) {
     if (!image) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 })
     }
+
+    console.log("Company Profile received:", companyProfile ? "Yes" : "No")
+    console.log("Company Name:", companyProfile?.company_name || "Not provided")
 
     const vibePrompts = {
       casual:
@@ -54,32 +59,30 @@ IMPORTANT: Use this company information to create personalized, relevant caption
 `
         : ""
 
-    const basePrompt = `Analyze this image and generate 3 different bilingual social media captions (Khmer and English) with a ${vibePrompts[vibe as keyof typeof vibePrompts] || vibePrompts.casual}
+    const basePrompt = `You are a bilingual social media caption generator. Analyze this image and generate 3 different social media captions in BOTH Khmer and English with a ${vibePrompts[vibe as keyof typeof vibePrompts] || vibePrompts.casual}
 
 ${companyContext}
 
-IMPORTANT FORMAT REQUIREMENTS:
-- Each caption must start with "[English Below]" 
-- Then write the Khmer text (3-4 sentences, detailed and engaging, incorporating company context when relevant)
-- Then write the English text below the Khmer (3-4 sentences, detailed and engaging, incorporating company context when relevant)
-- End with 8-12 relevant hashtags in both languages (#ខ្មែរ #English)
-- Make the captions longer and more detailed (200-300 characters each language)
-- Focus on what's actually visible in the image
-- Make them shareable and likely to get engagement
-- If company profile is provided, naturally incorporate the business context, brand voice, and target audience
-- Use the company's brand colors, unique selling points, and marketing goals to enhance the captions
+CRITICAL FORMATTING REQUIREMENTS - FOLLOW EXACTLY:
+1. Each caption MUST start with "[English Below]" 
+2. Write 3-4 sentences in Khmer (detailed and engaging)
+3. Then write 3-4 sentences in English (detailed and engaging) 
+4. End with 8-12 relevant hashtags in both languages (#ខ្មែរ #English)
+5. Make captions 200-300 characters each language
+6. Focus on what's actually visible in the image
+7. If company profile provided, incorporate business context naturally
+
+EXAMPLE FORMAT (MANDATORY):
+[English Below]
+ខ្មែរ text here with detailed description and engaging content that reflects brand voice...
+English text here with detailed description and engaging content that reflects brand voice...
+#hashtag1 #hashtag2 #ខ្មែរ #English #companyrelated
 
 ${customPrompt ? `Additional custom instructions: ${customPrompt}` : ""}
 
 ${regenerate ? "Generate completely new and different captions from any previous ones." : ""}
 
-Example format:
-[English Below]
-ខ្មែរ text here with detailed description, company context, and engaging content that reflects the brand voice and appeals to the target audience...
-English text here with detailed description, company context, and engaging content that reflects the brand voice and appeals to the target audience...
-#hashtag1 #hashtag2 #ខ្មែរ #English #companyrelated #industryspecific
-
-Return only the captions, separated by double line breaks, without numbering.`
+IMPORTANT: You MUST generate captions in BOTH languages for each caption. Never skip the English portion. Return exactly 3 captions separated by double line breaks, without numbering.`
 
     const result = await generateText({
       model: gemini,
@@ -98,12 +101,18 @@ Return only the captions, separated by double line breaks, without numbering.`
           ],
         },
       ],
+      temperature: 0.7, // Balance between creativity and consistency
+      maxTokens: 2000, // Ensure enough tokens for full responses
     })
+
+    console.log("Generated text:", result.text)
 
     const captions = result.text
       .split("\n\n")
       .filter((caption) => caption.trim().length > 0 && caption.includes("[English Below]"))
       .slice(0, 3) // Ensure we only get 3 captions
+
+    console.log("Processed captions:", captions.length)
 
     return NextResponse.json({ captions })
   } catch (error) {
