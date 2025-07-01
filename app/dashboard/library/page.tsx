@@ -126,7 +126,7 @@ export default function LibraryPage() {
         <div className="relative overflow-visible">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-green-600/10 rounded-3xl"></div>
           <div className="relative text-center space-y-4 py-8 md:py-10 px-6 overflow-visible">
-            <h1 className="text-3xl sm:text-4xl font-bold font-sans text-gray-800 dark:text-white leading-[1.4] mb-2 overflow-visible">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white leading-[1.4] mb-2 overflow-visible">
               {language === "km" ? "បណ្ណាល័យរបស់ខ្ញុំ" : "My Library"}
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
