@@ -2,7 +2,7 @@
 
 import React from "react"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
+import Link from "next/link"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   Building2,
@@ -36,7 +36,7 @@ export default function Header({
 
   return (
     <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-4">
-      <div className="flex items-center gap-4">
+      <Link href={"/dashboard"} className="flex items-center gap-4">
         <div className="w-12 h-12 rounded-xl overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
           <Image 
             src="/logo.png" 
@@ -48,10 +48,10 @@ export default function Header({
         </div>
         <div>
           <h1 className="text-2xl font-bold text-teal-600 dark:text-teal-400">
-            {language === "km" ? "ចំណង (Jomnorng)" : "Jomnorng (ចំណង)"}
+            {language === "km" ? "ចំណង" : "Jomnorng"}
           </h1>
         </div>
-      </div>
+      </Link>
 
       {/* Hamburger Menu */}
       <div className="flex items-center">
