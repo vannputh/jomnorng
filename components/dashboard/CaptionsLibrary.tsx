@@ -1,35 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
-  Copy, 
   Heart, 
   Search, 
-  Filter, 
-  MoreVertical, 
-  Trash2,
   RefreshCw,
-  Calendar,
-  Image as ImageIcon,
-  ChevronDown,
-  ChevronUp
+  Image as ImageIcon
 } from "lucide-react"
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import type { Language } from "@/lib/types"
 import { createClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { VIBE_OPTIONS } from "@/lib/constants"
-import Image from "next/image"
+import CaptionCard from "./CaptionCard"
 
 interface CaptionEntry {
   id: string
@@ -339,177 +325,18 @@ export default function CaptionsLibrary({ userId, language }: CaptionsLibraryPro
       ) : (
         <div className="space-y-4">
           {filteredCaptions.map((caption) => (
-            <Card key={caption.id} className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-6">
-                  {/* Left sidebar - Tags and Date */}
-                  <div className="flex flex-col gap-3 min-w-[140px]">
-                    <Badge variant="outline" className="capitalize w-fit">
-                      {caption.vibe}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {formatDate(caption.created_at)}
-                    </span>
-                  </div>
-
-                  {/* Main content area */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-4">
-                      {/* Image Preview - now inline with content */}
-                      {caption.image_url && (
-                        <div className="w-32 h-32 flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
-                          <Image
-                            src={caption.image_url}
-                            alt="Caption image"
-                            width={128}
-                            height={128}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-
-                      {/* Text content */}
-                      <div className="flex-1 min-w-0">
-                        {/* Header - now just contains action buttons */}
-                        <div className="flex items-center justify-end mb-3">
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleFavorite(caption.id)}
-                              className="text-muted-foreground hover:text-red-500"
-                            >
-                              <Heart className={`w-4 h-4 ${caption.is_favorite ? "fill-current text-red-500" : ""}`} />
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <MoreVertical className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => regenerateCaption(caption)}>
-                                  <RefreshCw className="w-4 h-4 mr-2" />
-                                  {language === "km" ? "បង្កើតឡើងវិញ" : "Regenerate"}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => deleteCaption(caption.id)}
-                                  className="text-red-600"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  {language === "km" ? "លុប" : "Delete"}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-
-                        {/* Final Caption or All Captions */}
-                        <div className="space-y-2">
-                          {caption.final_caption ? (
-                            /* New workflow: Show final caption with dropdown for originals */
-                            <div className="space-y-2">
-                              {/* Final Caption */}
-                              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border-l-4 border-green-500">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="text-xs text-green-700 dark:text-green-300 font-medium mb-1">
-                                      {language === "km" ? "ចំណងជើងចុងក្រោយ" : "Final Caption"}
-                                    </div>
-                                    <p className="text-sm text-gray-900 dark:text-gray-100 leading-relaxed">
-                                      {caption.final_caption}
-                                    </p>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => copyToClipboard(caption.final_caption!)}
-                                    className="ml-2 flex-shrink-0"
-                                  >
-                                    <Copy className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </div>
-
-                              {/* Original Captions Dropdown */}
-                              <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
-                                <Button
-                                  variant="ghost"
-                                  onClick={() => toggleCaptionExpansion(caption.id)}
-                                  className="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-800"
-                                >
-                                  <span className="text-sm text-muted-foreground">
-                                    {language === "km" ? "មើលជម្រើសដើម (៣)" : "View original options (3)"}
-                                  </span>
-                                  {expandedCaptions.has(caption.id) ? (
-                                    <ChevronUp className="w-4 h-4" />
-                                  ) : (
-                                    <ChevronDown className="w-4 h-4" />
-                                  )}
-                                </Button>
-                                
-                                {expandedCaptions.has(caption.id) && (
-                                  <div className="border-t border-gray-200 dark:border-gray-700 p-3 space-y-2">
-                                    {caption.captions.map((text, index) => (
-                                      <div
-                                        key={index}
-                                        className="flex items-start justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded group"
-                                      >
-                                        <p className="text-sm text-gray-700 dark:text-gray-300 flex-1 pr-2">
-                                          {text}
-                                        </p>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => copyToClipboard(text)}
-                                          className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                        >
-                                          <Copy className="w-4 h-4" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            /* Legacy workflow: Show all captions as before */
-                            caption.captions.map((text, index) => (
-                              <div
-                                key={index}
-                                className="flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg group"
-                              >
-                                <p className="text-sm text-gray-900 dark:text-gray-100 flex-1 pr-2">
-                                  {text}
-                                </p>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => copyToClipboard(text)}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                >
-                                  <Copy className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            ))
-                          )}
-                        </div>
-
-                        {/* Custom Prompt */}
-                        {caption.custom_prompt && (
-                          <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border-l-4 border-blue-500">
-                            <p className="text-xs text-blue-700 dark:text-blue-300">
-                              <strong>{language === "km" ? "សំណើសម្រាប់:" : "Custom prompt:"}</strong> {caption.custom_prompt}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <CaptionCard
+              key={caption.id}
+              caption={caption}
+              language={language}
+              expandedCaptions={expandedCaptions}
+              onToggleFavorite={toggleFavorite}
+              onDeleteCaption={deleteCaption}
+              onRegenerateCaption={regenerateCaption}
+              onCopyToClipboard={copyToClipboard}
+              onToggleCaptionExpansion={toggleCaptionExpansion}
+              formatDate={formatDate}
+            />
           ))}
         </div>
       )}

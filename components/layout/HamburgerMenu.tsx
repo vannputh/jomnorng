@@ -137,9 +137,9 @@ export default function HamburgerMenu({
                     </div>
 
                     {/* Scrollable content area */}
-                    <div className="flex-1 overflow-y-auto pb-4">
+                    <div className="flex-1 overflow-y-auto py-4">
                         {/* Settings Section */}
-                        <div className="py-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="pb-4 mb-4 border-b border-gray-200 dark:border-gray-700">
                             <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
                                 {language === "km" ? "ការកំណត់" : "Settings"}
                             </h4>
@@ -186,24 +186,26 @@ export default function HamburgerMenu({
                                             ? "ភាសា"
                                             : "Language"}
                                     </label>
-                                    <Select
-                                        value={language}
-                                        onValueChange={(value: Language) =>
-                                            setLanguage(value)
-                                        }
-                                    >
-                                        <SelectTrigger className="w-full border-gray-200 dark:border-gray-700 focus:ring-teal-500 h-8 text-sm">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="km">
-                                                🇰🇭 ខ្មែរ
-                                            </SelectItem>
-                                            <SelectItem value="en">
-                                                🇺🇸 English
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="px-1">
+                                        <Select
+                                            value={language}
+                                            onValueChange={(value: Language) =>
+                                                setLanguage(value)
+                                            }
+                                        >
+                                            <SelectTrigger className="w-full border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-teal-500 focus:ring-offset-1 h-9 text-sm">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="km">
+                                                    🇰🇭 ខ្មែរ
+                                                </SelectItem>
+                                                <SelectItem value="en">
+                                                    🇬🇧 English
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
