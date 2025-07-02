@@ -55,6 +55,7 @@ export default function GeneratePage() {
     // Refs for scrolling to different sections
     const generateHeaderRef = useRef<HTMLDivElement>(null);
     const editHeaderRef = useRef<HTMLDivElement>(null);
+    const rightColumnRef = useRef<HTMLDivElement>(null);
 
     // Flag to prevent clearing form data when user is actively editing
     const [isInitialized, setIsInitialized] = useState(false);
@@ -130,8 +131,8 @@ export default function GeneratePage() {
 
         setIsAnalyzing(true);
         
-        // Scroll to generate header when user clicks generate
-        scrollToSection(generateHeaderRef);
+        // Scroll to where results will appear (right column) when user clicks generate
+        scrollToSection(rightColumnRef);
         
         try {
             // Create the payload and log it for debugging
@@ -530,7 +531,7 @@ export default function GeneratePage() {
                         </div>
 
                         {/* Right Column - Generated Captions */}
-                        <div className="flex flex-col h-full">
+                        <div ref={rightColumnRef} className="flex flex-col h-full">
                             <div className="relative flex-1 h-full">
                                 <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
                                 <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 h-full">
