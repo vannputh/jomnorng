@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyProfile } from "@/hooks/use-company-profile";
+import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase";
 import { VIBE_OPTIONS } from "@/lib/constants";
@@ -20,7 +21,7 @@ import CompanyProfileForm from "@/components/company/CompanyProfileForm";
 import { Stepper } from "@/components/ui/stepper";
 
 export default function GeneratePage() {
-    const [language, setLanguage] = useState<Language>("km");
+    const { language, setLanguage } = useLanguage();
     const [image, setImage] = useState<string | null>(null);
     const [selectedVibe, setSelectedVibe] = useState("professional");
     const [customPrompt, setCustomPrompt] = useState("");

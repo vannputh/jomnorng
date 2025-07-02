@@ -7,12 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
-import logo from "@/public/logo.png";
 import type { Language, AuthMode } from "@/lib/types";
 import { getTranslations } from "@/lib/translations";
 
 interface AuthPageProps {
     language: Language;
+    setLanguage: (language: Language) => void;
     onBack: () => void;
     onAuth: (
         authMode: AuthMode,
@@ -25,6 +25,7 @@ interface AuthPageProps {
 
 export default function AuthPage({
     language,
+    setLanguage,
     onBack,
     onAuth,
     isLoading,
@@ -55,6 +56,15 @@ export default function AuthPage({
                         className="absolute top-4 left-4 p-2"
                     >
                         ← Back
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            setLanguage(language === "en" ? "km" : "en")
+                        }
+                        className="absolute top-4 right-4 p-2 text-sm"
+                    >
+                        {language === "en" ? "ខ្មែរ" : "EN"}
                     </Button>
                     <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center gap-3">
                         <Image

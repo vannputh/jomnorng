@@ -11,21 +11,20 @@ import {
     TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { useCompanyProfile } from "@/hooks/use-company-profile";
 import { useToast } from "@/hooks/use-toast";
-import type { Language, CompanyProfile } from "@/lib/types";
+import type { CompanyProfile } from "@/lib/types";
 
 // Component imports
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 import CompanyProfileForm from "@/components/company/CompanyProfileForm";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function DashboardPage() {
-    const [language, setLanguage] = useState<Language>("km");
+    const { language, setLanguage } = useLanguage();
     const [showProfile, setShowProfile] = useState(false);
 
     const router = useRouter();

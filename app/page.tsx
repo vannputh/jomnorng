@@ -6,7 +6,7 @@ import type { Language } from "@/lib/types"
 import LandingPage from "@/components/landing/LandingPage"
 
 export default function HomePage() {
-  const [language, setLanguage] = useState<Language>("km")
+  const [language, setLanguage] = useState<Language>("en")
   const router = useRouter()
 
   const handleGetStarted = () => {
