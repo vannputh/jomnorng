@@ -58,13 +58,13 @@ export default function CaptionList({
 
     if (captions.length === 0) {
         return (
-            <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
+            <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 h-full flex flex-col">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-black dark:text-white text-lg">
                         {t.generatedCaptions}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <CardContent className="flex-1 flex flex-col items-center py-12 text-center">
                     <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
                         <Sparkles className="w-8 h-8 text-gray-400 dark:text-gray-600" />
                     </div>
@@ -84,20 +84,20 @@ export default function CaptionList({
     // Selection Stage - Choose favorite from 3 options
     if (workflowStage === "selecting") {
         return (
-            <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
+            <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 h-full flex flex-col">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-black dark:text-white text-lg">
                         <Heart className="w-5 h-5 text-red-500" />
                         {language === "km" ? "ជ្រើសរើសចំណងជើងដែលចូលចិត្តបំផុត" : "Choose Your Favorite"}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col space-y-4">
+                <CardContent className="flex-1 flex flex-col space-y-4">
                     <p className="text-sm text-muted-foreground">
                         {language === "km" 
                             ? "ជ្រើសរើសចំណងជើងដែលអ្នកចូលចិត្តបំផុត ហើយអ្នកអាចកែប្រែ ឬកែលម្អបន្ថែម"
                             : "Pick the caption you like most, then you can edit or improve it further"}
                     </p>
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                    <div className="space-y-3 flex-1 overflow-y-auto">
                         {captions.map((caption, index) => (
                             <Card
                                 key={index}
@@ -147,14 +147,14 @@ export default function CaptionList({
         };
 
         return (
-            <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
+            <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 h-full flex flex-col">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-black dark:text-white text-lg">
                         <Edit className="w-5 h-5" />
                         {language === "km" ? "កែប្រែចំណងជើង" : "Edit Your Caption"}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col space-y-4">
+                <CardContent className="flex-1 flex flex-col space-y-4">
                     <div className="space-y-3">
                         <Label htmlFor="final-caption">
                             {language === "km" ? "ចំណងជើងចុងក្រោយ" : "Final Caption"}
@@ -294,14 +294,14 @@ export default function CaptionList({
         };
 
         return (
-            <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
+            <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 h-full flex flex-col">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-black dark:text-white text-lg">
                         <Wand2 className="w-5 h-5" />
                         {language === "km" ? "ការកែលម្អបានបញ្ចប់" : "Improvement Complete"}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col space-y-4">
+                <CardContent className="flex-1 flex flex-col space-y-4">
                     <p className="text-sm text-muted-foreground">
                         {language === "km" 
                             ? "AI បានកែលម្អចំណងជើងរបស់អ្នក។ អ្នកអាចបន្តកែប្រែ ឬបញ្ចប់ការងារ"
@@ -373,8 +373,8 @@ export default function CaptionList({
     // Done Stage - Show success
     if (workflowStage === "done") {
         return (
-            <Card className="border border-green-200 dark:border-green-800 shadow-lg bg-green-50 dark:bg-green-950">
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <Card className="border border-green-200 dark:border-green-800 shadow-lg bg-green-50 dark:bg-green-950 h-full flex flex-col">
+                <CardContent className="flex-1 flex flex-col items-center justify-center py-12 text-center">
                     <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center mb-4">
                         <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
                     </div>
@@ -411,7 +411,7 @@ export default function CaptionList({
     }
 
     return (
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 h-full flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-black dark:text-white text-lg">
                     {t.generatedCaptions}
@@ -439,8 +439,8 @@ export default function CaptionList({
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent className="flex flex-col space-y-4">
-                <div className="space-y-3 max-h-80 overflow-y-auto">
+            <CardContent className="flex-1 flex flex-col space-y-4">
+                <div className="space-y-3 flex-1 overflow-y-auto">
                     {captions.map((caption, index) => (
                         <Card
                             key={index}
