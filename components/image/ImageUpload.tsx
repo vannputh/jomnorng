@@ -14,6 +14,7 @@ interface ImageUploadProps {
   setImage: (image: string | null) => void
   language: Language
   onReset: () => void
+  disabled?: boolean
 }
 
 export default function ImageUpload({
@@ -21,6 +22,7 @@ export default function ImageUpload({
   setImage,
   language,
   onReset,
+  disabled = false,
 }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
@@ -28,6 +30,8 @@ export default function ImageUpload({
 
   const handleImageUpload = useCallback(
     (file: File) => {
+      if (disabled) return
+      
       if (file && file.type.startsWith("image/")) {
         const reader = new FileReader()
         reader.onload = (e) => {
@@ -42,10 +46,11 @@ export default function ImageUpload({
         })
       }
     },
-    [setImage, toast],
+    [setImage, toast, disabled],
   )
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return
     const file = e.target?.files?.[0]
     if (file) {
       handleImageUpload(file)
@@ -54,6 +59,8 @@ export default function ImageUpload({
 
   const handlePaste = useCallback(
     (e: ClipboardEvent) => {
+      if (disabled) return
+      
       const items = e.clipboardData?.items
       if (items) {
         for (let i = 0; i < items.length; i++) {
@@ -67,25 +74,44 @@ export default function ImageUpload({
         }
       }
     },
-    [handleImageUpload],
+    [handleImageUpload, disabled],
   )
 
   useEffect(() => {
-    document.addEventListener("paste", handlePaste)
-    return () => document.removeEventListener("paste", handlePaste)
-  }, [handlePaste])
+    if (!disabled) {
+      document.addEventListener("paste", handlePaste)
+      return () => document.removeEventListener("paste", handlePaste)
+    }
+  }, [handlePaste, disabled])
 
   return (
-    <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900">
+    <Card className={`h-full border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-black dark:text-white">
-          <Camera className="w-5 h-5" />
-          {t.uploadImage}
+        <CardTitle className="flex items-center justify-between text-black dark:text-white">
+          <div className="flex items-center gap-2">
+            <Camera className="w-5 h-5" />
+            {t.uploadImage}
+            {disabled && (
+              <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                {language === "km" ? "ចាក់សោ" : "Locked"}
+              </span>
+            )}
+          </div>
+          {image && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={onReset} 
+              disabled={disabled}
+            >
+              {t.changeImage}
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col">
         {!image ? (
-          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center space-y-4 bg-gray-50 dark:bg-gray-800">
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center space-y-4 bg-gray-50 dark:bg-gray-800 flex-1 flex flex-col justify-center">
             <div
               className="w-16 h-16 mx-auto bg-primary rounded-2xl flex items-center justify-center"
             >
@@ -99,12 +125,17 @@ export default function ImageUpload({
             </div>
             <div className="flex gap-3 justify-center">
               <Button
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => !disabled && fileInputRef.current?.click()}
+                disabled={disabled}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 {t.chooseFile}
               </Button>
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+              <Button 
+                variant="outline" 
+                onClick={() => !disabled && fileInputRef.current?.click()}
+                disabled={disabled}
+              >
                 <Camera className="w-4 h-4 mr-2" />
                 {t.camera}
               </Button>
@@ -116,25 +147,19 @@ export default function ImageUpload({
               capture="environment"
               onChange={handleFileChange}
               className="hidden"
+              disabled={disabled}
             />
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-100 dark:bg-gray-800">
-              <div className="aspect-video w-full max-w-md mx-auto">
-                <Image
-                  src={image || "/placeholder.svg"}
-                  alt="Uploaded image"
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <Button variant="outline" onClick={onReset} className="w-full max-w-xs">
-                {t.uploadDifferent}
-              </Button>
+          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-100 dark:bg-gray-800 flex-1 flex items-center">
+            <div className="aspect-video w-full max-w-md mx-auto">
+              <Image
+                src={image || "/placeholder.svg"}
+                alt="Uploaded image"
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
             </div>
           </div>
         )}

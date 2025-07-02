@@ -98,6 +98,7 @@ export default function DashboardAnalytics({ userId, language }: DashboardAnalyt
         custom_prompt?: string
         company_profile?: any
         language?: string
+        caption_length?: string
       }>
 
       // Calculate time periods
@@ -116,8 +117,27 @@ export default function DashboardAnalytics({ userId, language }: DashboardAnalyt
         }
       ).length
 
-      // Calculate time saved (assume 5 minutes per caption manually)
-      const timeSaved = typedCaptions.length * 5
+      // Calculate time saved based on caption length (dynamic)
+      const timeSaved = typedCaptions.reduce((total, caption) => {
+        const length = caption.caption_length || 'medium' // default to medium if not specified
+        let timePerCaption
+        
+        switch (length) {
+          case 'short':
+            timePerCaption = 3 // 3 minutes for short captions
+            break
+          case 'medium':
+            timePerCaption = 6 // 6 minutes for medium captions
+            break
+          case 'long':
+            timePerCaption = 10 // 10 minutes for long captions
+            break
+          default:
+            timePerCaption = 6 // default to medium
+        }
+        
+        return total + timePerCaption
+      }, 0)
 
       // Calculate average caption length
       const totalCharacters = typedCaptions.reduce((acc, caption) => {
@@ -172,8 +192,8 @@ export default function DashboardAnalytics({ userId, language }: DashboardAnalyt
       const totalDays = dailyStats.length
       const activityConsistency = Math.min(100, Math.round((daysWithActivity / totalDays) * 100))
 
-      // Recent activity (last 5) - map to match our interface
-      const recentActivity = typedCaptions.slice(0, 5).map(caption => ({
+      // Recent activity (last 3) - map to match our interface
+      const recentActivity = typedCaptions.slice(0, 3).map(caption => ({
         id: caption.id,
         captions: caption.captions,
         vibe: caption.vibe,

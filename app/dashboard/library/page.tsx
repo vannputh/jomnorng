@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { Loader2, ArrowLeft } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useCompanyProfile } from "@/hooks/use-company-profile"
+import { useLanguage } from "@/lib/contexts/LanguageContext"
 import type { Language, CompanyProfile } from "@/lib/types"
 
 // Component imports
@@ -12,9 +13,10 @@ import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import CaptionsLibrary from "@/components/dashboard/CaptionsLibrary"
 import CompanyProfileForm from "@/components/company/CompanyProfileForm"
+import { Button } from "@/components/ui/button"
 
 export default function LibraryPage() {
-  const [language, setLanguage] = useState<Language>("km")
+  const { language, setLanguage } = useLanguage()
   const [showProfile, setShowProfile] = useState(false)
 
   const router = useRouter()
@@ -102,8 +104,9 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-black dark:to-gray-800">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-black dark:to-gray-800 flex flex-col">
+      <div className="flex-1">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         <Header
           user={user}
           language={language}
@@ -122,18 +125,32 @@ export default function LibraryPage() {
           />
         </Header>
 
-        {/* Page Title */}
+        {/* Back Button & Page Title */}
         <div className="relative overflow-visible">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-green-600/10 rounded-3xl"></div>
-          <div className="relative text-center space-y-4 py-8 md:py-10 px-6 overflow-visible">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white leading-[1.4] mb-2 overflow-visible">
-              {language === "km" ? "បណ្ណាល័យរបស់ខ្ញុំ" : "My Library"}
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {language === "km" 
-                ? "មើលនិងគ្រប់គ្រងចំណងជើងដែលបានបង្កើតរបស់អ្នក" 
-                : "View and manage your generated caption collection"}
-            </p>
+          <div className="relative py-8 px-6">
+            <div className="flex items-center gap-4 mb-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push("/dashboard")}
+                className="flex items-center gap-2 bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                {language === "km" ? "ត្រលប់ក្រោយ" : "Back"}
+              </Button>
+            </div>
+            
+            <div className="text-center space-y-4">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white leading-[1.4] mb-2 overflow-visible">
+                {language === "km" ? "បណ្ណាល័យរបស់ខ្ញុំ" : "My Library"}
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                {language === "km" 
+                  ? "មើលនិងគ្រប់គ្រងចំណងជើងដែលបានបង្កើតរបស់អ្នក" 
+                  : "View and manage your generated caption collection"}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -145,8 +162,9 @@ export default function LibraryPage() {
           </div>
         </div>
 
-        <Footer language={language} />
+        </div>
       </div>
+      <Footer language={language} />
     </div>
   )
 } 

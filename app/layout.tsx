@@ -2,8 +2,9 @@ import type React from "react";
 import type { Metadata, Viewport } from "next";
 import { Dangrek } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LanguageProvider } from "@/lib/contexts/LanguageContext";
+import { Toaster } from "@/components/ui/toaster";
 
 const dangrek = Dangrek({
     subsets: ["latin"],
@@ -59,15 +60,17 @@ export default function RootLayout({
                 className={`${dangrek.className} min-h-screen flex flex-col`}
                 suppressHydrationWarning
             >
-                <ThemeProvider
-                    attribute="class"
-                    defaultTheme="system"
-                    enableSystem
-                    disableTransitionOnChange
-                >
-                    <div className="flex flex-col min-h-screen">{children}</div>
-                    <Toaster />
-                </ThemeProvider>
+                <LanguageProvider>
+                    <ThemeProvider
+                        attribute="class"
+                        defaultTheme="system"
+                        enableSystem
+                        disableTransitionOnChange
+                    >
+                        <div className="flex flex-col min-h-screen">{children}</div>
+                        <Toaster />
+                    </ThemeProvider>
+                </LanguageProvider>
             </body>
         </html>
     );

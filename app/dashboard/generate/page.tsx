@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyProfile } from "@/hooks/use-company-profile";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { createClient } from "@/lib/supabase";
 import { VIBE_OPTIONS } from "@/lib/constants";
 import type { Language, CompanyProfile } from "@/lib/types";
@@ -18,9 +19,11 @@ import VibeSelection from "@/components/image/VibeSelection";
 import CaptionList from "@/components/captions/CaptionList";
 import CompanyProfileForm from "@/components/company/CompanyProfileForm";
 import { Stepper } from "@/components/ui/stepper";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function GeneratePage() {
-    const [language, setLanguage] = useState<Language>("km");
+    const { language, setLanguage } = useLanguage();
     const [image, setImage] = useState<string | null>(null);
     const [selectedVibe, setSelectedVibe] = useState("professional");
     const [customPrompt, setCustomPrompt] = useState("");
@@ -30,6 +33,13 @@ export default function GeneratePage() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
     const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [includeCompanyProfile, setIncludeCompanyProfile] = useState(true);
+    const [captionLength, setCaptionLength] = useState("medium");
+    const [workflowStage, setWorkflowStage] = useState<"initial" | "selecting" | "editing" | "improving" | "done">("initial");
+    const [selectedFavorite, setSelectedFavorite] = useState("");
+    const [finalCaption, setFinalCaption] = useState("");
+    const [isImproving, setIsImproving] = useState(false);
+    const [improvedCaptions, setImprovedCaptions] = useState<string[]>([]);
 
     const router = useRouter();
     const { user, isLoading: authLoading, handleLogout } = useAuth();
@@ -105,6 +115,10 @@ export default function GeneratePage() {
         setImage(null);
         setCaptions([]);
         setSelectedCaption("");
+        setWorkflowStage("initial");
+        setSelectedFavorite("");
+        setFinalCaption("");
+        setImprovedCaptions([]);
     };
 
     const analyzeImage = async () => {
@@ -112,18 +126,24 @@ export default function GeneratePage() {
 
         setIsAnalyzing(true);
         try {
+            // Create the payload and log it for debugging
+            const payload = {
+                image: image.split(",")[1],
+                vibe: selectedVibe,
+                customPrompt,
+                captionLength,
+                companyProfile: includeCompanyProfile ? localCompanyProfile : null,
+                language,
+            };
+
+            console.log("Analyzing image with payload:", payload);
+
             const response = await fetch("/api/analyze-image", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    image: image.split(",")[1],
-                    vibe: selectedVibe,
-                    customPrompt,
-                    companyProfile: localCompanyProfile,
-                    language,
-                }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -133,24 +153,9 @@ export default function GeneratePage() {
             const data = await response.json();
             setCaptions(data.captions);
             setSelectedCaption(data.captions[0] || "");
+            setWorkflowStage("selecting");
 
-            // Save generated caption to database
-            if (supabase && data.captions.length > 0) {
-                try {
-                    await supabase.from("generated_captions").insert({
-                        user_id: user.id,
-                        image_url: image,
-                        captions: data.captions,
-                        vibe: selectedVibe,
-                        custom_prompt: customPrompt,
-                        company_profile: localCompanyProfile,
-                        language: language,
-                        created_at: new Date().toISOString(),
-                    });
-                } catch (error) {
-                    console.error("Error saving caption:", error);
-                }
-            }
+            // Will save to database later when user finalizes
 
             toast({
                 title:
@@ -173,6 +178,101 @@ export default function GeneratePage() {
             });
         } finally {
             setIsAnalyzing(false);
+        }
+    };
+
+    const handleSelectFavorite = (caption: string) => {
+        setSelectedFavorite(caption);
+        setFinalCaption(caption);
+        setWorkflowStage("editing");
+    };
+
+    const handleAIImprove = async (customImprovementMessage?: string) => {
+        if (!finalCaption) return;
+        
+        setIsImproving(true);
+        try {
+            const improvePayload = {
+                originalCaption: finalCaption,
+                vibe: selectedVibe,
+                customPrompt,
+                captionLength,
+                companyProfile: includeCompanyProfile ? localCompanyProfile : null,
+                language,
+                customImprovementMessage,
+            };
+
+            const response = await fetch("/api/improve-caption", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(improvePayload),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to improve caption");
+            }
+
+            const data = await response.json();
+            setImprovedCaptions(data.improvedCaptions || []);
+            setWorkflowStage("improving");
+            
+            toast({
+                title: language === "km" ? "បានកែលម្អ!" : "Improvements Ready!",
+                description: language === "km" ? "ជ្រើសរើសការកែលម្អដែលអ្នកចូលចិត្ត" : "Choose your favorite improvement",
+            });
+        } catch (error) {
+            toast({
+                title: language === "km" ? "កែលម្អបរាជ័យ" : "Improvement failed",
+                description: language === "km" ? "សូមព្យាយាមម្តងទៀត" : "Please try again",
+                variant: "destructive",
+            });
+        } finally {
+            setIsImproving(false);
+        }
+    };
+
+    const handleSelectImprovedCaption = (caption: string) => {
+        setFinalCaption(caption);
+        setWorkflowStage("editing");
+    };
+
+    const handleBackFromImproving = () => {
+        setWorkflowStage("editing");
+        setImprovedCaptions([]);
+    };
+
+    const handleDone = async () => {
+        if (!finalCaption || !user || !supabase) return;
+
+        try {
+            await supabase.from("generated_captions").insert({
+                user_id: user.id,
+                image_url: image,
+                captions: captions, // Original 3 captions
+                final_caption: finalCaption, // User's final choice
+                vibe: selectedVibe,
+                custom_prompt: customPrompt,
+                caption_length: captionLength,
+                company_profile: includeCompanyProfile ? localCompanyProfile : null,
+                language: language,
+                created_at: new Date().toISOString(),
+            });
+
+            setWorkflowStage("done");
+            
+            toast({
+                title: language === "km" ? "រក្សាទុកបានជោគជ័យ!" : "Saved successfully!",
+                description: language === "km" ? "ចំណងជើងបានរក្សាទុកក្នុងបណ្ណាល័យ" : "Caption saved to your library",
+            });
+        } catch (error) {
+            console.error("Error saving final caption:", error);
+            toast({
+                title: "Error",
+                description: "Failed to save caption",
+                variant: "destructive",
+            });
         }
     };
 
@@ -231,8 +331,13 @@ export default function GeneratePage() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-                <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black">
+                <div className="text-center space-y-4">
+                    <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
+                    <p className="text-sm text-muted-foreground">
+                        Loading generator...
+                    </p>
+                </div>
             </div>
         );
     }
@@ -242,29 +347,61 @@ export default function GeneratePage() {
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black">
-            <div className="max-w-6xl mx-auto p-6 space-y-8">
-                <Header
-                    user={user}
-                    language={language}
-                    setLanguage={setLanguage}
-                    showProfile={showProfile}
-                    setShowProfile={setShowProfile}
-                    onLogout={handleLogout}
-                    companyProfile={globalProfile}
-                >
-                    <CompanyProfileForm
-                        profile={localCompanyProfile}
-                        setProfile={setLocalCompanyProfile}
-                        onSave={handleSaveProfile}
-                        isSaving={isSavingProfile}
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-black dark:to-gray-800 flex flex-col">
+            <div className="flex-1">
+                <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+                    <Header
+                        user={user}
                         language={language}
-                    />
-                </Header>
+                        setLanguage={setLanguage}
+                        showProfile={showProfile}
+                        setShowProfile={setShowProfile}
+                        onLogout={handleLogout}
+                        companyProfile={localCompanyProfile}
+                    >
+                        <CompanyProfileForm
+                            profile={localCompanyProfile}
+                            setProfile={setLocalCompanyProfile}
+                            onSave={handleSaveProfile}
+                            isSaving={isSavingProfile}
+                            language={language}
+                        />
+                    </Header>
+
+                {/* Back Button & Page Header */}
+                <div className="relative overflow-visible">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-3xl"></div>
+                    <div className="relative py-8 px-6">
+                        <div className="flex items-center gap-4 mb-6">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push("/dashboard")}
+                                className="flex items-center gap-2 bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                {language === "km" ? "ត្រលប់ក្រោយ" : "Back"}
+                            </Button>
+                        </div>
+                        
+                        <div className="text-center space-y-4">
+                            <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-white leading-[1.4]">
+                                {language === "km" ? "បង្កើតចំណងជើង" : "Generate Captions"}
+                            </h1>
+                            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                                {language === "km"
+                                    ? "ផ្ទុករូបភាពហើយបង្កើតចំណងជើង AI ដែលគួរឱ្យទាក់ទាញ"
+                                    : "Upload an image and create engaging AI-powered captions"}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                
 
                 {/* Progress Indicator */}
-                <div className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 rounded-lg">
-                    <div className="p-6">
+                <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
+                    <CardContent className="p-6">
                         <Stepper
                             steps={[
                                 {
@@ -303,59 +440,96 @@ export default function GeneratePage() {
                                 </p>
                             </div>
                         )}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
+
+
 
                 {/* Main Content */}
                 {!image ? (
                     /* Full width layout when no image */
-                    <ImageUpload
-                        image={image}
-                        setImage={setImage}
-                        language={language}
-                        onReset={handleImageReset}
-                    />
-                ) : (
-                    /* Two-column layout when image is uploaded */
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Left Column - Image Upload & Controls */}
-                        <div className="lg:col-span-2 space-y-6">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
+                        <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
                             <ImageUpload
                                 image={image}
                                 setImage={setImage}
                                 language={language}
                                 onReset={handleImageReset}
                             />
-
-                            <VibeSelection
-                                selectedVibe={selectedVibe}
-                                setSelectedVibe={setSelectedVibe}
-                                customPrompt={customPrompt}
-                                setCustomPrompt={setCustomPrompt}
-                                language={language}
-                                onAnalyze={analyzeImage}
-                                isAnalyzing={isAnalyzing}
-                            />
+                        </div>
+                    </div>
+                ) : (
+                    /* Improved two-column layout with flexible heights */
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+                        {/* Left Column - Image Upload & Controls */}
+                        <div className="flex flex-col">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
+                                <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 flex flex-col space-y-6">
+                                    <ImageUpload
+                                        image={image}
+                                        setImage={setImage}
+                                        language={language}
+                                        onReset={handleImageReset}
+                                        disabled={isAnalyzing || captions.length > 0}
+                                    />
+                                    
+                                    <VibeSelection
+                                        selectedVibe={selectedVibe}
+                                        setSelectedVibe={setSelectedVibe}
+                                        customPrompt={customPrompt}
+                                        setCustomPrompt={setCustomPrompt}
+                                        language={language}
+                                        onAnalyze={analyzeImage}
+                                        isAnalyzing={isAnalyzing}
+                                        includeCompanyProfile={includeCompanyProfile}
+                                        setIncludeCompanyProfile={setIncludeCompanyProfile}
+                                        localCompanyProfile={localCompanyProfile}
+                                        onShowProfile={() => setShowProfile(true)}
+                                        captionLength={captionLength}
+                                        setCaptionLength={setCaptionLength}
+                                        disabled={isAnalyzing || captions.length > 0}
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         {/* Right Column - Generated Captions */}
-                        <div className="space-y-6">
-                            <CaptionList
-                                captions={captions}
-                                selectedCaption={selectedCaption}
-                                setSelectedCaption={setSelectedCaption}
-                                selectedVibeOption={selectedVibeOption}
-                                language={language}
-                                onRefresh={analyzeImage}
-                                onCopy={copyToClipboard}
-                                isGenerating={isGenerating}
-                            />
+                        <div className="flex flex-col">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
+                                <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+                                    <CaptionList
+                                        captions={captions}
+                                        selectedCaption={selectedCaption}
+                                        setSelectedCaption={setSelectedCaption}
+                                        selectedVibeOption={selectedVibeOption}
+                                        language={language}
+                                        onRefresh={analyzeImage}
+                                        onCopy={copyToClipboard}
+                                        isGenerating={isGenerating}
+                                        workflowStage={workflowStage}
+                                        onSelectFavorite={handleSelectFavorite}
+                                        selectedFavorite={selectedFavorite}
+                                        finalCaption={finalCaption}
+                                        setFinalCaption={setFinalCaption}
+                                        onAIImprove={handleAIImprove}
+                                        isImproving={isImproving}
+                                        onDone={handleDone}
+                                        improvedCaptions={improvedCaptions}
+                                        onSelectImprovedCaption={handleSelectImprovedCaption}
+                                        onBackFromImproving={handleBackFromImproving}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
 
-                <Footer language={language} />
+                </div>
             </div>
+            <Footer language={language} />
         </div>
     );
 }

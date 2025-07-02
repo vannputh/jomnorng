@@ -6,12 +6,13 @@ import { Loader2 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { createClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/contexts/LanguageContext"
 
 import type { Language, CompanyProfile } from "@/lib/types"
 import FirstTimeSetup from "@/components/company/FirstTimeSetup"
 
 export default function SetupPage() {
-  const [language, setLanguage] = useState<Language>("km")
+  const { language, setLanguage } = useLanguage()
   const [isSaving, setIsSaving] = useState(false)
   const router = useRouter()
   const { user, isLoading: authLoading } = useAuth()

@@ -1,14 +1,12 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
-
-import type { Language } from "@/lib/types"
+import { useLanguage } from "@/lib/contexts/LanguageContext"
 import AuthPage from "@/components/auth/AuthPage"
 
 export default function AuthPageRoute() {
-  const [language, setLanguage] = useState<Language>("km")
+  const { language } = useLanguage()
   const router = useRouter()
   const { handleAuth, isLoading } = useAuth()
 

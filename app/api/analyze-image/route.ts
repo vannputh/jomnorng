@@ -19,9 +19,12 @@ export async function POST(request: NextRequest) {
             image,
             vibe,
             customPrompt,
+            captionLength,
             companyProfile,
             regenerate,
             language,
+            improve,
+            originalCaption,
         } = await request.json();
 
         if (!image) {
@@ -63,26 +66,89 @@ IMPORTANT: Use this company information to create personalized, relevant caption
 `
                 : "";
 
+        const lengthInstructions = {
+            short: "Keep captions short and concise (exactly 3 sentences per language)",
+            medium: "Create medium-length captions (exactly 5 sentences per language)",
+            long: "Write detailed, comprehensive captions (exactly 10 sentences per language)"
+        };
+
+        // Get sentence count for dynamic formatting
+        const getSentenceCount = (length: string) => {
+            switch (length) {
+                case 'short': return 3;
+                case 'medium': return 5;
+                case 'long': return 10;
+                default: return 5;
+            }
+        };
+
+        const sentenceCount = getSentenceCount(captionLength);
+
+        // Handle AI improvement requests
+        if (improve && originalCaption) {
+            const improvePrompt = `Improve this existing social media caption to make it more engaging, creative, and effective while maintaining the same ${vibe} vibe:
+
+ORIGINAL CAPTION:
+"${originalCaption}"
+
+${companyContext}
+
+REQUIREMENTS:
+- Maintain the same general tone and ${vibe} vibe
+- ${lengthInstructions[captionLength as keyof typeof lengthInstructions] || lengthInstructions.medium}
+- Make it more engaging and compelling
+- Keep it bilingual (Khmer and English)
+- Improve grammar, flow, and impact
+- ${customPrompt ? `Additional requirements: ${customPrompt}` : ''}
+
+Please provide ONE improved version of this caption that is more engaging and effective.`;
+
+            const improveResult = await generateText({
+                model: gemini,
+                messages: [
+                    {
+                        role: "user",
+                        content: improvePrompt,
+                    },
+                ],
+                maxTokens: 500,
+                temperature: 0.7,
+            });
+
+            const improvedCaption = improveResult.text?.trim() || originalCaption;
+
+            return NextResponse.json({
+                improvedCaption,
+                captions: [improvedCaption], // Fallback for compatibility
+            });
+        }
+
         const basePrompt = `Analyze this image and generate 3 different bilingual social media captions with a ${
             vibePrompts[vibe as keyof typeof vibePrompts] || vibePrompts.casual
         }
+
+LENGTH REQUIREMENT: ${lengthInstructions[captionLength as keyof typeof lengthInstructions] || lengthInstructions.medium}
 
 ${companyContext}
 
 CRITICAL FORMAT REQUIREMENTS - FOLLOW EXACTLY:
 1. Each caption must start with exactly "[English Below]"
-2. Next line: Write Khmer text (3-4 sentences, detailed and engaging)
+2. Next line: Write Khmer text (exactly ${sentenceCount} sentences, detailed and engaging)
 3. Add 5-8 relevant Khmer hashtags on the same line as Khmer text
-4. Next line: Write English text (3-4 sentences, detailed and engaging) 
+4. Next line: Write English text (exactly ${sentenceCount} sentences, detailed and engaging) 
 5. Add 5-8 relevant English hashtags on the same line as English text
 6. Leave a blank line between each caption
 
 CONTENT REQUIREMENTS:
-- Make captions detailed and engaging (150-250 characters each language)
+- Write exactly ${sentenceCount} sentences for each language (Khmer and English)
+- The English text MUST be a direct translation of the Khmer text with the same meaning
+- Both versions should convey identical information, just in different languages
+- Make captions detailed and engaging with proper sentence structure
 - Focus on what's actually visible in the image
 - If company profile provided, incorporate business context naturally
 - Use brand voice and appeal to target audience
 - Make them shareable and engagement-worthy
+- Each sentence should be complete and meaningful
 
 ${customPrompt ? `Additional custom instructions: ${customPrompt}` : ""}
 
@@ -92,18 +158,18 @@ ${
         : ""
 }
 
-EXACT FORMAT EXAMPLE:
+EXACT FORMAT EXAMPLE (showing ${sentenceCount} sentences per language with exact translations):
 [English Below]
-ពិតជាស្អាតណាស់! រូបភាពនេះបង្ហាញពីភាពស្រស់ស្អាតនិងភាពរីករាយ។ វាធ្វើឱ្យយើងរំលឹកដល់ពេលវេលាដ៏ល្អនៅជាមួយគ្រួសារ។ #ស្រស់ស្អាត #រីករាយ #គ្រួសារ #ពេលវេលាល្អ #ជីវិត
-So beautiful! This image shows such freshness and joy. It reminds us of wonderful times with family and loved ones. #beautiful #joy #family #goodtimes #life #happiness #moments #love
+ពិតជាស្អាតណាស់! រូបភាពនេះបង្ហាញពីភាពស្រស់ស្អាតនិងភាពរីករាយ។ វាធ្វើឱ្យយើងរំលឹកដល់ពេលវេលាដ៏ល្អនៅជាមួយគ្រួសារ។${sentenceCount > 3 ? ' ខ្ញុំពិតជាចូលចិត្តអារម្មណ៍នេះ។' : ''}${sentenceCount > 4 ? ' វាជាទំនាក់ទំនងដ៏អស្ចារ្យមួយ។' : ''} #ស្រស់ស្អាត #រីករាយ #គ្រួសារ #ពេលវេលាល្អ #ជីវិត
+So beautiful! This image shows such freshness and joy. It reminds us of wonderful times with family and loved ones.${sentenceCount > 3 ? ' I truly love this feeling.' : ''}${sentenceCount > 4 ? ' It is such a wonderful connection.' : ''} #beautiful #joy #family #goodtimes #life
 
 [English Below]
-រូបភាពនេះពិតជាធ្វើឱ្យចិត្ត! វាបង្ហាញពីសុភមង្គលនិងភាពសប្បាយ។ អ្វីដែលអស្ចារ្យជាងនេះទេ! #សុភមង្គល #សប្បាយ #អស្ចារ្យ #ចិត្តល្អ #ភាពសុខ
-This image is absolutely heartwarming! It captures such peace and happiness. Nothing could be more wonderful than this! #peaceful #happiness #wonderful #heartwarming #blessed #amazing #perfect #inspiring
+រូបភាពនេះពិតជាធ្វើឱ្យចិត្ត! វាបង្ហាញពីសុភមង្គលនិងភាពសប្បាយ។ អ្វីដែលអស្ចារ្យជាងនេះទេ!${sentenceCount > 3 ? ' ខ្ញុំរំពឹងថានឹងមានពេលបែបនេះច្រើនជាង។' : ''}${sentenceCount > 4 ? ' ជីវិតពិតជាស្រស់ស្អាតណាស់។' : ''} #សុភមង្គល #សប្បាយ #អស្ចារ្យ #ចិត្តល្អ #ភាពសុខ
+This image is absolutely heartwarming! It captures such peace and happiness. Nothing could be more wonderful than this!${sentenceCount > 3 ? ' I hope to have more moments like this.' : ''}${sentenceCount > 4 ? ' Life is truly beautiful.' : ''} #peaceful #happiness #wonderful #heartwarming #blessed
 
 [English Below]
-ភាពស្រស់ស្អាតបែបនេះពិតជាកម្រ! វាបង្ហាញពីអ្វីដែលធម្មជាតិផ្តល់ឱ្យ។ យើងគួរតែរក្សាវាឱ្យបានយូរ។ #ធម្មជាតិ #ស្រស់ស្អាត #កម្រ #រក្សា #យូរ
-This kind of beauty is truly rare! It shows what nature has gifted us. We should preserve it for a long time. #nature #beauty #rare #preserve #gift #natural #stunning #treasure
+ភាពស្រស់ស្អាតបែបនេះពិតជាកម្រ! វាបង្ហាញពីអ្វីដែលធម្មជាតិផ្តល់ឱ្យ។ យើងគួរតែរក្សាវាឱ្យបានយូរ។${sentenceCount > 3 ? ' ទីកន្លែងបែបនេះពិតជាប្រណិត។' : ''}${sentenceCount > 4 ? ' ខ្ញុំមានអារម្មណ៍បានបានបានផ្តល់ឱ្យ។' : ''} #ធម្មជាតិ #ស្រស់ស្អាត #កម្រ #រក្សា #យូរ
+This kind of beauty is truly rare! It shows what nature has gifted us. We should preserve it for a long time.${sentenceCount > 3 ? ' Places like this are truly special.' : ''}${sentenceCount > 4 ? ' I feel so blessed to experience this.' : ''} #nature #beauty #rare #preserve #gift
 
 Return ONLY the 3 captions in the exact format above, separated by blank lines.`;
 

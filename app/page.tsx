@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
-import type { Language } from "@/lib/types"
+import { useLanguage } from "@/lib/contexts/LanguageContext"
 import LandingPage from "@/components/landing/LandingPage"
 
 export default function HomePage() {
-  const [language, setLanguage] = useState<Language>("km")
+  const { language, setLanguage } = useLanguage()
   const router = useRouter()
 
   const handleGetStarted = () => {

@@ -5,4 +5,4 @@ export * from "./types"
 export * from "./constants"
 
 // Translations
-export { translations, getTranslations } from "./constants/translations" 
+export { translations, getTranslations } from "./translations" 
