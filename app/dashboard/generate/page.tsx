@@ -52,6 +52,10 @@ export default function GeneratePage() {
     const supabase = typeof window !== "undefined" ? createClient() : null;
     const profileLoadedRef = useRef(false);
 
+    // Refs for scrolling to different sections
+    const generateHeaderRef = useRef<HTMLDivElement>(null);
+    const editHeaderRef = useRef<HTMLDivElement>(null);
+
     // Flag to prevent clearing form data when user is actively editing
     const [isInitialized, setIsInitialized] = useState(false);
 
@@ -125,6 +129,10 @@ export default function GeneratePage() {
         if (!image || !user) return;
 
         setIsAnalyzing(true);
+        
+        // Scroll to generate header when user clicks generate
+        scrollToSection(generateHeaderRef);
+        
         try {
             // Create the payload and log it for debugging
             const payload = {
@@ -154,6 +162,11 @@ export default function GeneratePage() {
             setCaptions(data.captions);
             setSelectedCaption(data.captions[0] || "");
             setWorkflowStage("selecting");
+
+            // Scroll to edit header when generation finishes
+            setTimeout(() => {
+                scrollToSection(editHeaderRef);
+            }, 100);
 
             // Will save to database later when user finalizes
 
@@ -185,6 +198,11 @@ export default function GeneratePage() {
         setSelectedFavorite(caption);
         setFinalCaption(caption);
         setWorkflowStage("editing");
+        
+        // Scroll to edit header when user chooses favorite
+        setTimeout(() => {
+            scrollToSection(editHeaderRef);
+        }, 100);
     };
 
     const handleAIImprove = async (customImprovementMessage?: string) => {
@@ -262,6 +280,11 @@ export default function GeneratePage() {
 
             setWorkflowStage("done");
             
+            // Scroll to edit header when caption is saved (same as choose/edit views)
+            setTimeout(() => {
+                scrollToSection(editHeaderRef);
+            }, 100);
+            
             toast({
                 title: language === "km" ? "រក្សាទុកបានជោគជ័យ!" : "Saved successfully!",
                 description: language === "km" ? "ចំណងជើងបានរក្សាទុកក្នុងបណ្ណាល័យ" : "Caption saved to your library",
@@ -329,6 +352,17 @@ export default function GeneratePage() {
         }
     };
 
+    // Utility function for smooth scrolling
+    const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
+        if (ref.current) {
+            ref.current.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest"
+            });
+        }
+    };
+
     if (authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black">
@@ -369,7 +403,7 @@ export default function GeneratePage() {
                     </Header>
 
                 {/* Back Button & Page Header */}
-                <div className="relative overflow-visible">
+                <div ref={generateHeaderRef} className="relative overflow-visible">
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-3xl"></div>
                     <div className="relative py-8 px-6">
                         <div className="flex items-center gap-4 mb-6">
@@ -520,6 +554,7 @@ export default function GeneratePage() {
                                         improvedCaptions={improvedCaptions}
                                         onSelectImprovedCaption={handleSelectImprovedCaption}
                                         onBackFromImproving={handleBackFromImproving}
+                                        editHeaderRef={editHeaderRef}
                                     />
                                 </div>
                             </div>

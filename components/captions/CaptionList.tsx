@@ -30,6 +30,7 @@ interface CaptionListProps {
     improvedCaptions?: string[];
     onSelectImprovedCaption?: (caption: string) => void;
     onBackFromImproving?: () => void;
+    editHeaderRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export default function CaptionList({
@@ -52,6 +53,7 @@ export default function CaptionList({
     improvedCaptions = [],
     onSelectImprovedCaption,
     onBackFromImproving,
+    editHeaderRef,
 }: CaptionListProps) {
     const t = getTranslations(language);
     const [customImprovementMessage, setCustomImprovementMessage] = useState("");
@@ -148,7 +150,7 @@ export default function CaptionList({
 
         return (
             <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900 h-full flex flex-col">
-                <CardHeader>
+                <CardHeader ref={editHeaderRef}>
                     <CardTitle className="flex items-center gap-2 text-black dark:text-white text-lg">
                         <Edit className="w-5 h-5" />
                         {language === "km" ? "កែប្រែចំណងជើង" : "Edit Your Caption"}
@@ -165,24 +167,6 @@ export default function CaptionList({
                             onChange={(e) => setFinalCaption?.(e.target.value)}
                             rows={calculateRows(finalCaption || "")}
                             className="resize-none bg-gray-50 dark:bg-gray-800 min-h-[80px]"
-                        />
-                    </div>
-                    
-                    <div className="space-y-3">
-                        <Label htmlFor="improvement-message">
-                            {language === "km" ? "សេចក្តីណែនាំបន្ថែម (ស្រេចចិត្ត)" : "Additional Instructions (Optional)"}
-                        </Label>
-                        <Textarea
-                            id="improvement-message"
-                            placeholder={
-                                language === "km"
-                                    ? "ប្រាប់ AI ពីរបៀបដែលអ្នកចង់កែលម្អ..."
-                                    : "Tell AI how you want to improve..."
-                            }
-                            value={customImprovementMessage}
-                            onChange={(e) => setCustomImprovementMessage(e.target.value)}
-                            rows={2}
-                            className="resize-none bg-gray-50 dark:bg-gray-800"
                         />
                     </div>
 
@@ -252,6 +236,24 @@ export default function CaptionList({
                                 {isImproving && <Loader2 className="w-4 h-4 animate-spin ml-auto" />}
                             </Button>
                         </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                        <Label htmlFor="improvement-message">
+                            {language === "km" ? "សេចក្តីណែនាំបន្ថែម (ស្រេចចិត្ត)" : "Additional Instructions (Optional)"}
+                        </Label>
+                        <Textarea
+                            id="improvement-message"
+                            placeholder={
+                                language === "km"
+                                    ? "ប្រាប់ AI ពីរបៀបដែលអ្នកចង់កែលម្អ..."
+                                    : "Tell AI how you want to improve..."
+                            }
+                            value={customImprovementMessage}
+                            onChange={(e) => setCustomImprovementMessage(e.target.value)}
+                            rows={2}
+                            className="resize-none bg-gray-50 dark:bg-gray-800"
+                        />
                     </div>
 
                     <div className="flex gap-2 pt-2">
@@ -374,14 +376,17 @@ export default function CaptionList({
     if (workflowStage === "done") {
         return (
             <Card className="border border-green-200 dark:border-green-800 shadow-lg bg-green-50 dark:bg-green-950 h-full flex flex-col">
-                <CardContent className="flex-1 flex flex-col items-center justify-center py-12 text-center">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-800 dark:text-green-200 text-lg">
+                        <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                        {language === "km" ? "រក្សាទុកបានជោគជ័យ!" : "Caption Saved!"}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col items-center py-8 text-center">
                     <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center mb-4">
                         <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-green-900 dark:text-green-100 mb-2">
-                        {language === "km" ? "រក្សាទុកបានជោគជ័យ!" : "Caption Saved!"}
-                    </h3>
-                    <p className="text-sm text-green-700 dark:text-green-300 max-w-sm mb-4">
+                    <p className="text-sm text-green-700 dark:text-green-300 max-w-sm mb-6">
                         {language === "km" 
                             ? "ចំណងជើងរបស់អ្នកត្រូវបានរក្សាទុកក្នុងបណ្ណាល័យ"
                             : "Your caption has been saved to your library"}
