@@ -2,9 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
 
-const gemini = google("gemini-1.5-flash", {
-    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-});
+const gemini = google("gemini-1.5-flash");
 
 export async function POST(request: NextRequest) {
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
@@ -34,13 +32,14 @@ export async function POST(request: NextRequest) {
         }
 
         const vibePrompts = {
-            casual: "casual, friendly, and relatable tone in both Khmer and English. Use everyday language and maybe some light humor.",
+            casual: "casual, friendly, and relatable tone in both Khmer and English. Use everyday language and warm, approachable messaging.",
             professional:
-                "professional, polished, and business-appropriate tone in both languages. Keep it clean and engaging.",
-            fun: "fun, playful, and energetic tone in both languages. Use emojis and upbeat language.",
+                "professional, polished, and business-appropriate tone in both languages. Keep it clean, credible, and engaging.",
+            fun: "fun, playful, and energetic tone in both languages. Use emojis, upbeat language, and engaging expressions.",
             inspirational:
-                "inspirational and motivational tone in both languages. Focus on positive messages and encouragement.",
-            trendy: "trendy, current, and social media savvy tone in both languages. Use popular phrases and relevant hashtags.",
+                "inspirational and motivational tone in both languages. Focus on positive messages, encouragement, and empowerment.",
+            trendy: "trendy, current, and social media savvy tone in both languages. Use popular phrases, modern expressions, and relevant hashtags.",
+            luxury: "luxury, elegant, and sophisticated tone in both languages. Use refined language, premium positioning, and exclusivity messaging.",
         };
 
         const companyContext =
