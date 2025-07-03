@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 export default function AuthCodeError() {
   const router = useRouter()
   const { toast } = useToast()
+  const [attempting, setAttempting] = useState(true)
 
   useEffect(() => {
     // Attempt to recover session from URL fragment (#access_token=...)
@@ -34,11 +35,25 @@ export default function AuthCodeError() {
         .then(({ error }: any) => {
           if (!error) {
             router.replace("/dashboard")
+          } else {
+            setAttempting(false)
           }
         })
-        .catch(() => {})
+        .catch(() => {
+          setAttempting(false)
+        })
+    } else {
+      setAttempting(false)
     }
   }, [router])
+
+  if (attempting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
