@@ -34,6 +34,8 @@ export function useAuth() {
     setIsLoading(true)
     try {
       if (authMode === "signup") {
+        const urlParams = new URLSearchParams(window.location.search)
+        const next = urlParams.get("next") || "/dashboard"
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -41,7 +43,7 @@ export function useAuth() {
             data: {
               full_name: fullName,
             },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
           },
         })
         if (error) throw error
@@ -87,12 +89,15 @@ export function useAuth() {
 
     try {
       setIsLoading(true)
-      const redirectTo = `${window.location.origin}/auth/callback`
-      const { error } = await supabase.auth.signInWithOAuth({
+      const urlParams = new URLSearchParams(window.location.search)
+      const next = urlParams.get("next") || "/dashboard"
+      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+      const { error } = await (supabase as any).auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo,
-        },
+          flowType: "pkce",
+        } as any,
       })
       if (error) {
         throw error

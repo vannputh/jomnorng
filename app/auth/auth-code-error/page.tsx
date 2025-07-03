@@ -4,8 +4,42 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { useEffect } from "react"
+import { createClient } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 export default function AuthCodeError() {
+  const router = useRouter()
+  const { toast } = useToast()
+
+  useEffect(() => {
+    // Attempt to recover session from URL fragment (#access_token=...)
+    const hash = window.location.hash.startsWith("#") ? window.location.hash.substring(1) : ""
+    const params = new URLSearchParams(hash)
+    const access_token = params.get("access_token")
+    const refresh_token = params.get("refresh_token")
+    const expires_in = params.get("expires_in")
+    const token_type = params.get("token_type") ?? "bearer"
+
+    if (access_token && refresh_token && expires_in) {
+      const supabase = createClient()
+      ;(supabase as any).auth
+        .setSession({
+          access_token,
+          refresh_token,
+          expires_in: Number(expires_in),
+          token_type,
+        } as any)
+        .then(({ error }: any) => {
+          if (!error) {
+            router.replace("/dashboard")
+          }
+        })
+        .catch(() => {})
+    }
+  }, [router])
+
   return (
     <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
