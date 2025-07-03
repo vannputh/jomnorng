@@ -8,7 +8,7 @@ import AuthPage from "@/components/auth/AuthPage"
 export default function AuthPageRoute() {
   const { language } = useLanguage()
   const router = useRouter()
-  const { handleAuth, isLoading } = useAuth()
+  const { handleAuth, handleGoogleSignIn, isLoading } = useAuth()
 
   console.log("AuthPageRoute: handleAuth function exists:", typeof handleAuth === 'function')
 
@@ -21,6 +21,7 @@ export default function AuthPageRoute() {
       language={language}
       onBack={handleBack}
       onAuth={handleAuth}
+      onGoogleAuth={handleGoogleSignIn}
       isLoading={isLoading}
     />
   )

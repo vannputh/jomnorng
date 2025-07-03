@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
-import logo from "@/public/logo.png";
 import type { Language, AuthMode } from "@/lib/types";
 import { getTranslations } from "@/lib/translations";
 
@@ -20,6 +19,7 @@ interface AuthPageProps {
         password: string,
         fullName?: string
     ) => void;
+    onGoogleAuth: () => void;
     isLoading: boolean;
 }
 
@@ -27,6 +27,7 @@ export default function AuthPage({
     language,
     onBack,
     onAuth,
+    onGoogleAuth,
     isLoading,
 }: AuthPageProps) {
     const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -150,6 +151,15 @@ export default function AuthPage({
                         className="w-full"
                     >
                         {authMode === "login" ? t.login : t.signup}
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        onClick={onGoogleAuth}
+                        disabled={isLoading}
+                        className="w-full"
+                    >
+                        {language === "km" ? "បន្តដោយ Google" : "Continue with Google"}
                     </Button>
                 </CardContent>
             </Card>

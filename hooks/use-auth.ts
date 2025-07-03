@@ -82,6 +82,34 @@ export function useAuth() {
     router.push("/")
   }
 
+  const handleGoogleSignIn = async () => {
+    if (!supabase) return
+
+    try {
+      setIsLoading(true)
+      const redirectTo = `${window.location.origin}/auth/callback`
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+        },
+      })
+      if (error) {
+        throw error
+      }
+      // On success, Supabase will handle the redirect to Google then back to our callback URL
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      // We keep loading state as true because the page will change on redirect, but ensure we reset just in case
+      setIsLoading(false)
+    }
+  }
+
   // Initialize auth state
   useEffect(() => {
     if (!supabase) return
@@ -158,6 +186,7 @@ export function useAuth() {
     user,
     isLoading,
     handleAuth,
+    handleGoogleSignIn,
     handleLogout,
     clearAuthData,
   }
