@@ -26,53 +26,35 @@ export function useAuth() {
     }
   }
 
-  const handleAuth = async (authMode: AuthMode, email: string, password: string, fullName?: string) => {
-    console.log("handleAuth called with:", { authMode, email, password: "***", fullName })
-    
-    if (!supabase) return
-    
+  const handleAuth = async (authMode: AuthMode, email: string, fullName?: string) => {
+    console.log("handleAuth called with:", { authMode, email, fullName })
+
+    if (!supabase) return false
+
     setIsLoading(true)
     try {
-      if (authMode === "signup") {
-        const urlParams = new URLSearchParams(window.location.search)
-        const next = urlParams.get("next") || "/dashboard"
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-            },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-          },
-        })
-        if (error) throw error
-        toast({
-          title: "Success!",
-          description: "Please check your email to verify your account.",
-        })
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (error) throw error
-        
-        // Direct redirect after successful login
-        const urlParams = new URLSearchParams(window.location.search)
-        const next = urlParams.get('next') || '/dashboard'
-        console.log("Login successful, redirecting to:", next)
-        
-        // Use window.location.replace for immediate redirect
-        window.location.replace(next)
-        return
-      }
+      const urlParams = new URLSearchParams(window.location.search)
+      const next = urlParams.get("next") || "/dashboard"
+      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: redirectTo,
+          data: authMode === "signup" ? { full_name: fullName } : undefined,
+        },
+      })
+
+      if (error) throw error
+
+      return true // Indicate success to the caller
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       })
+      return false
     } finally {
       setIsLoading(false)
     }
@@ -118,14 +100,18 @@ export function useAuth() {
   // Initialize auth state
   useEffect(() => {
     if (!supabase) return
-    
+
     const getUser = async () => {
       try {
         const {
           data: { user },
+          error,
         } = await supabase.auth.getUser()
 
-        if (user) {
+        if (error || !user) {
+          console.log("Error getting user or no user found:", error)
+          await clearAuthData()
+        } else {
           setUser({
             id: user.id,
             email: user.email!,
@@ -133,7 +119,7 @@ export function useAuth() {
           })
         }
       } catch (error) {
-        console.log("Error getting user:", error)
+        console.log("Error getting user (catch):", error)
         await clearAuthData()
       } finally {
         setIsLoading(false)
@@ -145,7 +131,7 @@ export function useAuth() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state change:", event, session?.user ? "User present" : "No user")
-      
+
       if (session?.user) {
         const newUser = {
           id: session.user.id,
@@ -156,7 +142,7 @@ export function useAuth() {
       } else {
         setUser(null)
       }
-      
+
       // Ensure loading state is updated
       setIsLoading(false)
     })
@@ -167,12 +153,12 @@ export function useAuth() {
   // Client-side route protection and redirects
   useEffect(() => {
     if (typeof window === "undefined" || isLoading) return
-    
+
     const currentPath = window.location.pathname
     const protectedPaths = ['/dashboard', '/setup']
     const isProtectedPath = protectedPaths.some(path => currentPath.startsWith(path))
     const isOnAuthPage = currentPath === '/auth'
-    
+
     if (isProtectedPath && !user) {
       // Redirect unauthenticated users from protected routes to auth
       console.log("Unauthenticated user on protected route, redirecting to auth...")
