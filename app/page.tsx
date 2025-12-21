@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/contexts/LanguageContext"
 import { useAuth } from "@/hooks/use-auth"
 import LandingPage from "@/components/landing/LandingPage"
+import { LandingSkeleton } from "@/components/skeletons/LandingSkeleton"
 
 export default function HomePage() {
   const { language, setLanguage } = useLanguage()
@@ -20,6 +21,10 @@ export default function HomePage() {
 
   const handleGetStarted = () => {
     router.push("/auth")
+  }
+
+  if (authLoading) {
+    return <LandingSkeleton />
   }
 
   return (

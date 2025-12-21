@@ -14,6 +14,7 @@ import Footer from "@/components/layout/Footer"
 import CaptionsLibrary from "@/components/dashboard/CaptionsLibrary"
 import CompanyProfileForm from "@/components/company/CompanyProfileForm"
 import { Button } from "@/components/ui/button"
+import { LibrarySkeleton } from "@/components/skeletons/LibrarySkeleton"
 
 export default function LibraryPage() {
   const { language, setLanguage } = useLanguage()
@@ -77,26 +78,19 @@ export default function LibraryPage() {
   // Custom save function that works with local state
   const handleSaveProfile = async () => {
     if (!user) return
-    
+
     // Update the global profile with local changes
     Object.assign(globalProfile, localCompanyProfile)
-    
+
     // Use the hook's save function
     await saveCompanyProfile(false)
-    
+
     // Reload the profile to get the latest data and update both states
     await loadCompanyProfile(user.id, true)
   }
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading your library...</p>
-        </div>
-      </div>
-    )
+    return <LibrarySkeleton />
   }
 
   if (!user) {
@@ -107,60 +101,60 @@ export default function LibraryPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-black dark:to-gray-800 flex flex-col">
       <div className="flex-1">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
-        <Header
-          user={user}
-          language={language}
-          setLanguage={setLanguage}
-          showProfile={showProfile}
-          setShowProfile={setShowProfile}
-          onLogout={handleLogout}
-          companyProfile={localCompanyProfile}
-        >
-          <CompanyProfileForm
-            profile={localCompanyProfile}
-            setProfile={setLocalCompanyProfile}
-            onSave={handleSaveProfile}
-            isSaving={globalSaving}
+          <Header
+            user={user}
             language={language}
-          />
-        </Header>
+            setLanguage={setLanguage}
+            showProfile={showProfile}
+            setShowProfile={setShowProfile}
+            onLogout={handleLogout}
+            companyProfile={localCompanyProfile}
+          >
+            <CompanyProfileForm
+              profile={localCompanyProfile}
+              setProfile={setLocalCompanyProfile}
+              onSave={handleSaveProfile}
+              isSaving={globalSaving}
+              language={language}
+            />
+          </Header>
 
-        {/* Back Button & Page Title */}
-        <div className="relative overflow-visible">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-green-600/10 rounded-3xl"></div>
-          <div className="relative py-8 px-6">
-            <div className="flex items-center gap-4 mb-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push("/dashboard")}
-                className="flex items-center gap-2 bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                {language === "km" ? "ត្រលប់ក្រោយ" : "Back"}
-              </Button>
-            </div>
-            
-            <div className="text-center space-y-4">
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white leading-[1.4] mb-2 overflow-visible">
-                {language === "km" ? "បណ្ណាល័យរបស់ខ្ញុំ" : "My Library"}
-              </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                {language === "km" 
-                  ? "មើលនិងគ្រប់គ្រងចំណងជើងដែលបានបង្កើតរបស់អ្នក" 
-                  : "View and manage your generated caption collection"}
-              </p>
+          {/* Back Button & Page Title */}
+          <div className="relative overflow-visible">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-green-600/10 rounded-3xl"></div>
+            <div className="relative py-8 px-6">
+              <div className="flex items-center gap-4 mb-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push("/dashboard")}
+                  className="flex items-center gap-2 bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  {language === "km" ? "ត្រលប់ក្រោយ" : "Back"}
+                </Button>
+              </div>
+
+              <div className="text-center space-y-4">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white leading-[1.4] mb-2 overflow-visible">
+                  {language === "km" ? "បណ្ណាល័យរបស់ខ្ញុំ" : "My Library"}
+                </h1>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                  {language === "km"
+                    ? "មើលនិងគ្រប់គ្រងចំណងជើងដែលបានបង្កើតរបស់អ្នក"
+                    : "View and manage your generated caption collection"}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content with enhanced container */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
-          <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
-            <CaptionsLibrary userId={user.id} language={language} />
+          {/* Main Content with enhanced container */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
+            <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+              <CaptionsLibrary userId={user.id} language={language} />
+            </div>
           </div>
-        </div>
 
         </div>
       </div>

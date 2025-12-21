@@ -10,6 +10,7 @@ import { useLanguage } from "@/lib/contexts/LanguageContext"
 
 import type { Language, CompanyProfile } from "@/lib/types"
 import FirstTimeSetup from "@/components/company/FirstTimeSetup"
+import { SetupSkeleton } from "@/components/skeletons/SetupSkeleton"
 
 export default function SetupPage() {
   const { language, setLanguage } = useLanguage()
@@ -52,7 +53,7 @@ export default function SetupPage() {
 
   const loadExistingProfile = async (userId: string) => {
     if (!supabase) return
-    
+
     try {
       const { data, error } = await supabase
         .from("company_profiles")
@@ -76,11 +77,11 @@ export default function SetupPage() {
 
   const handleSave = async () => {
     if (!user || !supabase) return
-    
+
     setIsSaving(true)
     try {
       const profileToSave = { ...localFormData, user_id: user.id }
-      
+
       const { data, error } = await supabase
         .from("company_profiles")
         .upsert([profileToSave as any], {
@@ -111,7 +112,7 @@ export default function SetupPage() {
 
   const handleSkip = async () => {
     if (!user || !supabase) return
-    
+
     setIsSaving(true)
     try {
       const minimalProfile = {
@@ -149,11 +150,7 @@ export default function SetupPage() {
   }
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
-      </div>
-    )
+    return <SetupSkeleton />
   }
 
   if (!user) {
