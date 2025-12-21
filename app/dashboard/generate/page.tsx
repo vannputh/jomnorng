@@ -21,6 +21,7 @@ import CompanyProfileForm from "@/components/company/CompanyProfileForm";
 import { Stepper } from "@/components/ui/stepper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { GenerateSkeleton } from "@/components/skeletons/GenerateSkeleton";
 
 export default function GeneratePage() {
     const { language, setLanguage } = useLanguage();
@@ -130,10 +131,10 @@ export default function GeneratePage() {
         if (!image || !user) return;
 
         setIsAnalyzing(true);
-        
+
         // Scroll to where results will appear (right column) when user clicks generate
         scrollToSection(rightColumnRef);
-        
+
         try {
             // Create the payload and log it for debugging
             const payload = {
@@ -199,7 +200,7 @@ export default function GeneratePage() {
         setSelectedFavorite(caption);
         setFinalCaption(caption);
         setWorkflowStage("editing");
-        
+
         // Scroll to edit header when user chooses favorite
         setTimeout(() => {
             scrollToSection(editHeaderRef);
@@ -208,7 +209,7 @@ export default function GeneratePage() {
 
     const handleAIImprove = async (customImprovementMessage?: string) => {
         if (!finalCaption) return;
-        
+
         setIsImproving(true);
         try {
             const improvePayload = {
@@ -236,7 +237,7 @@ export default function GeneratePage() {
             const data = await response.json();
             setImprovedCaptions(data.improvedCaptions || []);
             setWorkflowStage("improving");
-            
+
             toast({
                 title: language === "km" ? "បានកែលម្អ!" : "Improvements Ready!",
                 description: language === "km" ? "ជ្រើសរើសការកែលម្អដែលអ្នកចូលចិត្ត" : "Choose your favorite improvement",
@@ -280,12 +281,12 @@ export default function GeneratePage() {
             });
 
             setWorkflowStage("done");
-            
+
             // Scroll to edit header when caption is saved (same as choose/edit views)
             setTimeout(() => {
                 scrollToSection(editHeaderRef);
             }, 100);
-            
+
             toast({
                 title: language === "km" ? "រក្សាទុកបានជោគជ័យ!" : "Saved successfully!",
                 description: language === "km" ? "ចំណងជើងបានរក្សាទុកក្នុងបណ្ណាល័យ" : "Caption saved to your library",
@@ -365,16 +366,7 @@ export default function GeneratePage() {
     };
 
     if (authLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black">
-                <div className="text-center space-y-4">
-                    <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
-                    <p className="text-sm text-muted-foreground">
-                        Loading generator...
-                    </p>
-                </div>
-            </div>
-        );
+        return <GenerateSkeleton />;
     }
 
     if (!user) {
@@ -403,165 +395,165 @@ export default function GeneratePage() {
                         />
                     </Header>
 
-                {/* Back Button & Page Header */}
-                <div ref={generateHeaderRef} className="relative overflow-visible">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-3xl"></div>
-                    <div className="relative py-8 px-6">
-                        <div className="flex items-center gap-4 mb-6">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => router.push("/dashboard")}
-                                className="flex items-center gap-2 bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700"
-                            >
-                                <ArrowLeft className="w-4 h-4" />
-                                {language === "km" ? "ត្រលប់ក្រោយ" : "Back"}
-                            </Button>
-                        </div>
-                        
-                        <div className="text-center space-y-4">
-                            <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-white leading-[1.4]">
-                                {language === "km" ? "បង្កើតចំណងជើង" : "Generate Captions"}
-                            </h1>
-                            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                                {language === "km"
-                                    ? "ផ្ទុករូបភាពហើយបង្កើតចំណងជើង AI ដែលគួរឱ្យទាក់ទាញ"
-                                    : "Upload an image and create engaging AI-powered captions"}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                    {/* Back Button & Page Header */}
+                    <div ref={generateHeaderRef} className="relative overflow-visible">
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-3xl"></div>
+                        <div className="relative py-8 px-6">
+                            <div className="flex items-center gap-4 mb-6">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => router.push("/dashboard")}
+                                    className="flex items-center gap-2 bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    {language === "km" ? "ត្រលប់ក្រោយ" : "Back"}
+                                </Button>
+                            </div>
 
-                
-
-                {/* Progress Indicator */}
-                <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
-                    <CardContent className="p-6">
-                        <Stepper
-                            steps={[
-                                {
-                                    title:
-                                        language === "km"
-                                            ? "ផ្ទុករូបភាព"
-                                            : "Upload",
-                                    completed: !!image,
-                                    active: !image,
-                                },
-                                {
-                                    title:
-                                        language === "km"
-                                            ? "ជ្រើសស្ទីល"
-                                            : "Choose Style",
-                                    completed: captions.length > 0,
-                                    active: !!image && captions.length === 0,
-                                },
-                                {
-                                    title:
-                                        language === "km"
-                                            ? "ទទួលលទ្ធផល"
-                                            : "Get Results",
-                                    completed: captions.length > 0,
-                                    active: false,
-                                },
-                            ]}
-                        />
-
-                        {!image && (
-                            <div className="text-center mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className="text-center space-y-4">
+                                <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-white leading-[1.4]">
+                                    {language === "km" ? "បង្កើតចំណងជើង" : "Generate Captions"}
+                                </h1>
+                                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                                     {language === "km"
-                                        ? "ចាប់ផ្តើមដោយការផ្ទុករូបភាពរបស់អ្នក"
-                                        : "Start by uploading your image below"}
+                                        ? "ផ្ទុករូបភាពហើយបង្កើតចំណងជើង AI ដែលគួរឱ្យទាក់ទាញ"
+                                        : "Upload an image and create engaging AI-powered captions"}
                                 </p>
                             </div>
-                        )}
-                    </CardContent>
-                </Card>
+                        </div>
+                    </div>
 
 
 
-                {/* Main Content */}
-                {!image ? (
-                    /* Full width layout when no image */
-                    <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
-                        <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
-                            <ImageUpload
-                                image={image}
-                                setImage={setImage}
-                                language={language}
-                                onReset={handleImageReset}
+                    {/* Progress Indicator */}
+                    <Card className="border border-gray-200 dark:border-gray-800 shadow-lg bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
+                        <CardContent className="p-6">
+                            <Stepper
+                                steps={[
+                                    {
+                                        title:
+                                            language === "km"
+                                                ? "ផ្ទុករូបភាព"
+                                                : "Upload",
+                                        completed: !!image,
+                                        active: !image,
+                                    },
+                                    {
+                                        title:
+                                            language === "km"
+                                                ? "ជ្រើសស្ទីល"
+                                                : "Choose Style",
+                                        completed: captions.length > 0,
+                                        active: !!image && captions.length === 0,
+                                    },
+                                    {
+                                        title:
+                                            language === "km"
+                                                ? "ទទួលលទ្ធផល"
+                                                : "Get Results",
+                                        completed: captions.length > 0,
+                                        active: false,
+                                    },
+                                ]}
                             />
-                        </div>
-                    </div>
-                ) : (
-                    /* Two-column layout with equal heights */
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8 xl:items-stretch">
-                        {/* Left Column - Image Upload & Controls */}
-                        <div className="flex flex-col h-full">
-                            <div className="relative flex-1 h-full">
-                                <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
-                                <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 flex flex-col space-y-6 h-full">
-                                    <ImageUpload
-                                        image={image}
-                                        setImage={setImage}
-                                        language={language}
-                                        onReset={handleImageReset}
-                                        disabled={isAnalyzing || captions.length > 0}
-                                    />
-                                    
-                                    <VibeSelection
-                                        selectedVibe={selectedVibe}
-                                        setSelectedVibe={setSelectedVibe}
-                                        customPrompt={customPrompt}
-                                        setCustomPrompt={setCustomPrompt}
-                                        language={language}
-                                        onAnalyze={analyzeImage}
-                                        isAnalyzing={isAnalyzing}
-                                        includeCompanyProfile={includeCompanyProfile}
-                                        setIncludeCompanyProfile={setIncludeCompanyProfile}
-                                        localCompanyProfile={localCompanyProfile}
-                                        onShowProfile={() => setShowProfile(true)}
-                                        captionLength={captionLength}
-                                        setCaptionLength={setCaptionLength}
-                                        disabled={isAnalyzing || captions.length > 0}
-                                    />
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Right Column - Generated Captions */}
-                        <div ref={rightColumnRef} className="flex flex-col h-full">
-                            <div className="relative flex-1 h-full">
-                                <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
-                                <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 h-full">
-                                    <CaptionList
-                                        captions={captions}
-                                        selectedCaption={selectedCaption}
-                                        setSelectedCaption={setSelectedCaption}
-                                        selectedVibeOption={selectedVibeOption}
-                                        language={language}
-                                        onRefresh={analyzeImage}
-                                        onCopy={copyToClipboard}
-                                        isGenerating={isGenerating}
-                                        workflowStage={workflowStage}
-                                        onSelectFavorite={handleSelectFavorite}
-                                        selectedFavorite={selectedFavorite}
-                                        finalCaption={finalCaption}
-                                        setFinalCaption={setFinalCaption}
-                                        onAIImprove={handleAIImprove}
-                                        isImproving={isImproving}
-                                        onDone={handleDone}
-                                        improvedCaptions={improvedCaptions}
-                                        onSelectImprovedCaption={handleSelectImprovedCaption}
-                                        onBackFromImproving={handleBackFromImproving}
-                                        editHeaderRef={editHeaderRef}
-                                    />
+                            {!image && (
+                                <div className="text-center mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        {language === "km"
+                                            ? "ចាប់ផ្តើមដោយការផ្ទុករូបភាពរបស់អ្នក"
+                                            : "Start by uploading your image below"}
+                                    </p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+
+
+                    {/* Main Content */}
+                    {!image ? (
+                        /* Full width layout when no image */
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
+                            <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+                                <ImageUpload
+                                    image={image}
+                                    setImage={setImage}
+                                    language={language}
+                                    onReset={handleImageReset}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        /* Two-column layout with equal heights */
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8 xl:items-stretch">
+                            {/* Left Column - Image Upload & Controls */}
+                            <div className="flex flex-col h-full">
+                                <div className="relative flex-1 h-full">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
+                                    <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 flex flex-col space-y-6 h-full">
+                                        <ImageUpload
+                                            image={image}
+                                            setImage={setImage}
+                                            language={language}
+                                            onReset={handleImageReset}
+                                            disabled={isAnalyzing || captions.length > 0}
+                                        />
+
+                                        <VibeSelection
+                                            selectedVibe={selectedVibe}
+                                            setSelectedVibe={setSelectedVibe}
+                                            customPrompt={customPrompt}
+                                            setCustomPrompt={setCustomPrompt}
+                                            language={language}
+                                            onAnalyze={analyzeImage}
+                                            isAnalyzing={isAnalyzing}
+                                            includeCompanyProfile={includeCompanyProfile}
+                                            setIncludeCompanyProfile={setIncludeCompanyProfile}
+                                            localCompanyProfile={localCompanyProfile}
+                                            onShowProfile={() => setShowProfile(true)}
+                                            captionLength={captionLength}
+                                            setCaptionLength={setCaptionLength}
+                                            disabled={isAnalyzing || captions.length > 0}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Column - Generated Captions */}
+                            <div ref={rightColumnRef} className="flex flex-col h-full">
+                                <div className="relative flex-1 h-full">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
+                                    <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 h-full">
+                                        <CaptionList
+                                            captions={captions}
+                                            selectedCaption={selectedCaption}
+                                            setSelectedCaption={setSelectedCaption}
+                                            selectedVibeOption={selectedVibeOption}
+                                            language={language}
+                                            onRefresh={analyzeImage}
+                                            onCopy={copyToClipboard}
+                                            isGenerating={isGenerating}
+                                            workflowStage={workflowStage}
+                                            onSelectFavorite={handleSelectFavorite}
+                                            selectedFavorite={selectedFavorite}
+                                            finalCaption={finalCaption}
+                                            setFinalCaption={setFinalCaption}
+                                            onAIImprove={handleAIImprove}
+                                            isImproving={isImproving}
+                                            onDone={handleDone}
+                                            improvedCaptions={improvedCaptions}
+                                            onSelectImprovedCaption={handleSelectImprovedCaption}
+                                            onBackFromImproving={handleBackFromImproving}
+                                            editHeaderRef={editHeaderRef}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
                 </div>
             </div>
