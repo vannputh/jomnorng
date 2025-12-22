@@ -1,14 +1,15 @@
 import type React from "react";
 import type { Metadata, Viewport } from "next";
-import { Dangrek } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 import { Toaster } from "@/components/ui/toaster";
+import WavesBackground from "@/components/WavesBackground";
 
-const dangrek = Dangrek({
+const poppins = Poppins({
     subsets: ["latin"],
-    weight: "400",
+    weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -35,6 +36,14 @@ export const metadata: Metadata = {
         description: "កម្មវិធីបង្កើតចំណងជើងសម្រាប់បណ្តាញសង្គមដោយ AI",
     },
     generator: "v0.dev",
+    icons: {
+        icon: [
+            { url: "/logo-light.png", media: "(prefers-color-scheme: light)" },
+            { url: "/logo-dark.png", media: "(prefers-color-scheme: dark)" },
+            "/favicon.ico",
+        ],
+        apple: "/logo-light.png",
+    },
 };
 
 export const viewport: Viewport = {
@@ -53,11 +62,13 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
-                <link rel="icon" href="/favicon.ico" sizes="32x32" />
-                <link rel="apple-touch-icon" href="/icon-192.png" />
+                <link rel="icon" href="/logo-light.png" media="(prefers-color-scheme: light)" />
+                <link rel="icon" href="/logo-dark.png" media="(prefers-color-scheme: dark)" />
+                <link rel="icon" href="/favicon.ico" />
+                <link rel="apple-touch-icon" href="/logo-light.png" />
             </head>
             <body
-                className={`${dangrek.className} min-h-screen flex flex-col`}
+                className={`${poppins.className} min-h-screen flex flex-col`}
                 suppressHydrationWarning
             >
                 <LanguageProvider>
@@ -67,6 +78,7 @@ export default function RootLayout({
                         enableSystem
                         disableTransitionOnChange
                     >
+                        <WavesBackground />
                         <div className="flex flex-col min-h-screen">{children}</div>
                         <Toaster />
                     </ThemeProvider>

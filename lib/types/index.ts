@@ -2,6 +2,7 @@ export interface UserType {
   id: string
   email: string
   full_name?: string
+  user_metadata?: any
 }
 
 export interface CompanyProfile {
@@ -19,6 +20,7 @@ export interface CompanyProfile {
   website_url?: string
   social_handles?: string
   unique_selling_points: string
+  company_logo?: string
   created_at?: string
 }
 

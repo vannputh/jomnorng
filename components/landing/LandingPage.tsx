@@ -31,7 +31,7 @@ export default function LandingPage({
     const t = getTranslations(language);
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black">
+        <div className="min-h-screen bg-transparent">
             {/* Header */}
             <header className="p-4 border-b border-gray-200 dark:border-gray-800">
                 <div className="max-w-6xl mx-auto flex items-center justify-between">

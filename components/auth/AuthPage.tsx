@@ -75,7 +75,7 @@ export default function AuthPage({
 
     if (isSent) {
         return (
-            <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
+            <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
                 <Card className="w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
                     <CardHeader className="text-center space-y-4">
                         {/* ... (keep icon and title) */}
@@ -125,7 +125,7 @@ export default function AuthPage({
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
+        <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
             <Card className="w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
                 <CardHeader className="text-center space-y-4">
                     <Button

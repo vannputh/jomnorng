@@ -30,11 +30,11 @@ export function useCompanyProfile(language: Language) {
 
   const loadCompanyProfile = useCallback(async (userId: string, skipRedirect = false) => {
     if (!supabase || !userId) return
-    
+
     setIsLoading(true)
     try {
       console.log("Loading company profile for user:", userId)
-      
+
       const { data, error } = await supabase
         .from("company_profiles")
         .select("*")
@@ -95,23 +95,26 @@ export function useCompanyProfile(language: Language) {
     }
   }, [supabase, router])
 
-  const saveCompanyProfile = async (redirectToDashboard = false) => {
+  const saveCompanyProfile = async (redirectToDashboard = false, profileOverride?: CompanyProfile) => {
     if (!supabase) return
-    
+
     setIsSaving(true)
     try {
+      // Use override if provided, otherwise use state
+      const profileToSave = profileOverride || companyProfile
+
       // Ensure user_id is set
-      if (!companyProfile.user_id) {
+      if (!profileToSave.user_id) {
         throw new Error("User ID is required to save company profile")
       }
-      
-      console.log("Saving company profile:", companyProfile)
-      
+
+      console.log("Saving company profile:", profileToSave)
+
       // Use upsert with the unique constraint on user_id
       // This will insert if no profile exists, or update if one exists
       const { data, error } = await supabase
         .from("company_profiles")
-        .upsert([companyProfile as any], {
+        .upsert([profileToSave as any], {
           onConflict: 'user_id'
         })
         .select()
@@ -156,7 +159,7 @@ export function useCompanyProfile(language: Language) {
 
   const skipSetup = async () => {
     if (!supabase) return
-    
+
     setIsSaving(true)
     try {
       // Create a minimal profile to mark setup as complete
