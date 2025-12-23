@@ -277,7 +277,7 @@ export default function DashboardPage() {
                     />
 
                     {/* Profile Cards Section */}
-                    <div className="flex flex-col md:flex-row gap-8 pt-20 justify-center items-start max-w-5xl mx-auto w-full">
+                    <div className="flex flex-col md:flex-row gap-4 pt-20 justify-center items-start max-w-5xl mx-auto w-full">
                         {/* User Profile Card */}
                         <div className="flex-1 w-full flex justify-center">
                             <ProfileCard
@@ -426,13 +426,10 @@ export default function DashboardPage() {
 
                     {/* Main Content with enhanced container */}
                     <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-2xl"></div>
-                        <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
-                            <DashboardAnalytics
-                                userId={user.id}
-                                language={language}
-                            />
-                        </div>
+                        <DashboardAnalytics
+                            userId={user.id}
+                            language={language}
+                        />
                     </div>
 
                 </div>
