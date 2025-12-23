@@ -1,13 +1,13 @@
 "use client"
 
-import React from "react"
+import React, { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Building2 } from "lucide-react"
+import { Loader2, Building2, Upload, X } from "lucide-react"
 import type { Language, CompanyProfile } from "@/lib/types"
 import {
   BUSINESS_TYPES,
@@ -17,6 +17,7 @@ import {
   MARKETING_GOALS,
 } from "@/lib/constants"
 import { getTranslations } from "@/lib/translations"
+import { createClient } from "@/lib/supabase"
 
 interface CompanyProfileFormProps {
   profile: CompanyProfile
@@ -36,10 +37,59 @@ export default function CompanyProfileForm({
   isFirstTime = false,
 }: CompanyProfileFormProps) {
   const t = getTranslations(language)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleMarketingGoalsChange = (goal: string, checked: boolean) => {
     const goals = checked ? [...profile.marketing_goals, goal] : profile.marketing_goals.filter((g) => g !== goal)
     setProfile({ ...profile, marketing_goals: goals })
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert(language === "km" ? "សូមជ្រើសរើសរូបភាព" : "Please select an image file")
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert(language === "km" ? "រូបភាពធំពេក (អតិបរមា 10MB)" : "Image too large (max 10MB)")
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      const supabase = createClient()
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${profile.user_id}-${Date.now()}.${fileExt}`
+      const filePath = `company-logos/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('uploads')
+        .upload(filePath, file, { upsert: true })
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('uploads')
+        .getPublicUrl(filePath)
+
+      setProfile({ ...profile, company_logo: publicUrl })
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert(language === "km" ? "បរាជ័យក្នុងការផ្ទុកឡើង" : "Failed to upload")
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const clearLogo = () => {
+    setProfile({ ...profile, company_logo: "" })
+    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   return (
@@ -52,6 +102,61 @@ export default function CompanyProfileForm({
         </TabsList>
 
         <TabsContent value="basic" className="space-y-4">
+          {/* Company Logo Upload */}
+          <div className="space-y-2">
+            <Label>{language === "km" ? "ស្លាកសញ្ញាក្រុមហ៊ុន" : "Company Logo"}</Label>
+            <div className="flex items-center gap-4">
+              <div className="relative w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-gray-800 group">
+                {profile.company_logo ? (
+                  <>
+                    <img
+                      src={profile.company_logo}
+                      alt="Company logo"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={clearLogo}
+                      className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    >
+                      <X className="w-6 h-6 text-white" />
+                    </button>
+                  </>
+                ) : isUploading ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                ) : (
+                  <Building2 className="w-8 h-8 text-gray-400" />
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    <Upload className="w-4 h-4 mr-1" />
+                    {language === "km" ? "ផ្ទុកឡើង" : "Upload"}
+                  </Button>
+                </div>
+                <Input
+                  value={profile.company_logo || ""}
+                  onChange={(e) => setProfile({ ...profile, company_logo: e.target.value })}
+                  placeholder={language === "km" ? "ឬបិទភ្ជាប់ URL រូបភាព" : "Or paste image URL"}
+                  className="bg-gray-50 dark:bg-gray-800 text-xs"
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="company-name">{t.companyName}</Label>

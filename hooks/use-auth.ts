@@ -116,6 +116,7 @@ export function useAuth() {
             id: user.id,
             email: user.email!,
             full_name: user.user_metadata?.full_name,
+            user_metadata: user.user_metadata,
           })
         }
       } catch (error) {
@@ -137,6 +138,7 @@ export function useAuth() {
           id: session.user.id,
           email: session.user.email!,
           full_name: session.user.user_metadata?.full_name,
+          user_metadata: session.user.user_metadata,
         }
         setUser(newUser)
       } else {
